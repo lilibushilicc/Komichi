@@ -1,5 +1,7 @@
 # Komichi
 
+[![GitHub](https://img.shields.io/badge/GitHub-lilibushilicc%2FKomichi-181717?logo=github&style=flat-square)](https://github.com/lilibushilicc/Komichi)
+
 Komichi 是一个基于 Cloudflare Serverless 的漫画阅读追踪系统。
 
 ## 功能
