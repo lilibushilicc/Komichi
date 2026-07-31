@@ -26,6 +26,19 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            val keystoreDir = rootProject.file("keystore")
+            val passFile = keystoreDir.resolve("keystore-password.txt")
+            if (keystoreDir.resolve("release.jks").exists() && passFile.exists()) {
+                storeFile = keystoreDir.resolve("release.jks")
+                storePassword = passFile.readText().trim()
+                keyAlias = "komichi"
+                keyPassword = passFile.readText().trim()
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -33,6 +46,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 
