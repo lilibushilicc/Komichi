@@ -9,6 +9,18 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 
+class CrawlError(ValueError):
+    """爬取失败基类（继承 ValueError，兼容旧 catch 逻辑）"""
+
+
+class SourceNotFound(CrawlError):
+    """源上未找到目标作品（关键词无结果 / 站内搜索不可用），应触发换备"""
+
+
+class SourceUnavailable(CrawlError):
+    """源不可用（网络失败 / 反爬拦截 / 页面解析失败），应触发换备"""
+
+
 @dataclass
 class ChapterInfo:
     """章节数据
@@ -29,15 +41,26 @@ class WorkInfo:
 
     title: str
     category: str = ""
-    cover_path: Optional[str] = None        # 封面来源（本地路径或 URL）
-    cover_r2_path: Optional[str] = None     # 封面上传到 R2 后的路径
-    source_url: str = ""                    # 作品来源（本地目录或抓取 URL）
-    status: str = "ongoing"                 # 状态：ongoing / completed
+    description: str = ""                # 作品简介
+    cover_path: Optional[str] = None     # 封面来源（本地路径或 URL）
+    cover_r2_path: Optional[str] = None  # 封面上传到 R2 后的路径
+    source_url: str = ""                 # 作品来源（本地目录或抓取 URL）
+    status: str = "ongoing"              # 状态：ongoing / completed
     chapters: List[ChapterInfo] = field(default_factory=list)
 
 
 class BaseCrawler(ABC):
-    """爬虫抽象基类，定义统一抓取接口"""
+    """爬虫抽象基类，定义统一抓取接口
+
+    子类需声明：
+        name        源唯一标识（如 "godamh"），用于 CLI 与配置
+        display_name 源展示名称（如 "godamh.com"）
+        domains     该源拥有的域名列表，用于 URL 自动匹配（如 ["godamh.com"]）
+    """
+
+    name: str = "base"
+    display_name: str = ""
+    domains: List[str] = []
 
     def __init__(
         self,

@@ -71,7 +71,7 @@ work.get('/check/:id', async (c) => {
   }
 
   const workRow = await c.env.DB.prepare(
-    'SELECT id, title, latest_chapter_num, status, source_url FROM works WHERE id = ?',
+    'SELECT id, title, latest_chapter_num, status, source, source_url FROM works WHERE id = ?',
   ).bind(id).first<WorkRow>();
 
   if (!workRow) {
@@ -88,6 +88,7 @@ work.get('/check/:id', async (c) => {
       title: workRow.title,
       latest_chapter_num: workRow.latest_chapter_num,
       status: workRow.status,
+      source: workRow.source,
       source_url: workRow.source_url,
     },
     latest_chapter: latestChapter ?? null,
@@ -135,6 +136,7 @@ work.get('/:id', async (c) => {
  * {
  *   "title": "作品名",
  *   "category": "分类",
+ *   "description": "作品简介",
  *   "cover_r2_path": "covers/xxx.jpg",
  *   "source_url": "https://来源",
  *   "status": "ongoing",
@@ -159,7 +161,9 @@ work.post('/update', authMiddleware, requireRole('CRAWLER'), async (c) => {
 
   const title = body.title as string | undefined;
   const category = body.category as string | undefined;
+  const description = body.description as string | undefined;
   const cover_r2_path = body.cover_r2_path as string | undefined;
+  const source = body.source as string | undefined;
   const source_url = body.source_url as string | undefined;
   const status = body.status as string | undefined;
   const chapters = body.chapters as unknown[] | undefined;
@@ -188,12 +192,14 @@ work.post('/update', authMiddleware, requireRole('CRAWLER'), async (c) => {
   if (existing) {
     workId = existing.id;
     await c.env.DB.prepare(
-      'UPDATE works SET title = ?, category = ?, cover_r2_path = ?, source_url = ?, status = ? WHERE id = ?',
+      'UPDATE works SET title = ?, category = ?, description = ?, cover_r2_path = ?, source = ?, source_url = ?, status = ? WHERE id = ?',
     )
       .bind(
         title,
         category ?? existing.category,
+        description ?? existing.description,
         cover_r2_path ?? existing.cover_r2_path,
+        source ?? existing.source,
         source_url ?? existing.source_url,
         workStatus,
         workId,
@@ -201,9 +207,9 @@ work.post('/update', authMiddleware, requireRole('CRAWLER'), async (c) => {
       .run();
   } else {
     const insertRes = await c.env.DB.prepare(
-      'INSERT INTO works (title, category, cover_r2_path, source_url, status) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO works (title, category, description, cover_r2_path, source, source_url, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
     )
-      .bind(title, category ?? null, cover_r2_path ?? null, source_url ?? null, workStatus)
+      .bind(title, category ?? null, description ?? null, cover_r2_path ?? null, source ?? null, source_url ?? null, workStatus)
       .run();
     workId = insertRes.meta.last_row_id as number;
   }

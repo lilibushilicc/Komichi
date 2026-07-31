@@ -44,6 +44,7 @@ komichi-cli --help
 | `upload_concurrency`| 上传并发数（预留）                         | `4`           |
 | `request_timeout`   | 单次请求超时（秒）                         | `30`          |
 | `max_retries`       | 网络错误最大重试次数                       | `3`           |
+| `source_priority`   | 站点源优先级（关键词导入时按序自动换备）   | `["godamh", "mh160mh", "guazi", "kuaikan", "tencent", "bilibili"]` |
 
 > 本地暂存数据位于 `~/.komichi/staging/<slug>/work.json`，用于保存已导入但尚未/已经同步到 Worker 的作品数据。
 
@@ -54,8 +55,12 @@ komichi-cli init                       初始化配置（设置 Worker 地址、
 komichi-cli config show                显示当前配置
 komichi-cli config set <key> <value>   设置配置项
 
+komichi-cli source list                列出所有可用爬虫源
+
 komichi-cli import local <path>        从本地文件夹导入漫画
 komichi-cli import url <work_url>      从 URL 导入漫画（预留接口框架）
+komichi-cli import from <src> <query>  从指定源导入（src: godamh / mh160mh / guazi / kuaikan / tencent / bilibili / ...）
+komichi-cli import <url|keyword>       自动导入：URL 按域名识别源，关键词按优先级换备
 
 komichi-cli upload images <work_dir>   上传指定作品的图片到 R2
 komichi-cli sync work <work_id>        同步作品数据到 Worker
@@ -101,6 +106,46 @@ komichi-cli import local "D:/comics/某漫画" --title "某漫画" --category "�
 - 标题缺省时取文件夹名；封面缺省时自动取根目录第一张图片。
 - 章节号优先从子文件夹名中解析数字，无法解析则按顺序自增。
 - 导入结果保存到本地暂存，输出暂存 `slug` 供后续命令使用。
+
+### 多源导入与自动换备
+
+可用源通过 `komichi-cli source list` 查看（当前内置：`godamh`、`mh160mh`、`guazi`、`kuaikan`、`tencent`、`bilibili`，另有 `local`/`url` 两个非站点源）。
+
+```bash
+# 1. URL 自动识别源（无需指定源名）
+komichi-cli import https://www.mh160mh.com/kanmanhua/94/
+komichi-cli import https://godamh.com/manga/xxx
+komichi-cli import https://www.guazimanhua.com/comic.php?id=33993
+komichi-cli import https://www.kuaikanmanhua.com/web/comic/847609
+komichi-cli import https://ac.qq.com/Comic/comicInfo/id/505430
+komichi-cli import https://manga.bilibili.com/detail/mc24742
+
+# 2. 关键词自动换备：按配置 source_priority 顺序逐个尝试，
+#    某个源找到结果后先展示预览并询问「是不是这个作品？」（yes/no），
+#    确认后爬取；回答 no 则自动换下一个源；全部失败才报错
+komichi-cli import 海贼王
+
+# 非交互环境（管道/脚本）自动跳过确认；也可用 --yes 强制跳过：
+komichi-cli import 海贼王 --yes
+
+# 3. 显式指定源
+komichi-cli import from godamh 海贼王
+komichi-cli import from mh160mh https://www.mh160mh.com/kanmanhua/94/ --category 热血
+komichi-cli import from tencent 斗罗大陆
+komichi-cli import from bilibili 海贼王
+
+# 4. 调整源优先级（关键词换备顺序）
+komichi-cli config set source_priority mh160mh,godamh,guazi,kuaikan,tencent,bilibili
+```
+
+> 说明：mh160mh.com 站内搜索已关闭（搜索端点 404），guazimanhua.com 与 kuaikanmanhua.com
+> 未提供可用站内搜索，这三个源仅支持 URL 导入；用关键词导入时会自动提示改用 URL，
+> 并触发换备尝试下一个源。
+> bilibili 源基于 Playwright（无头浏览器）抓取——因其数据接口带 JS/WASM 签名与加密，
+> 纯 HTTP 无法访问。首次使用需安装：`pip install playwright` 与
+> `python -m playwright install chromium`，未安装时该源会提示换备到其他源。
+> 新增源只需在 `crawler/` 下实现 `BaseCrawler` 子类（声明 `name`/`domains`）并用
+> `@register_source` 注册，再把它加进 `source_priority` 即可，无需改动其他代码。
 
 ### import url - URL 导入（预留接口框架）
 
@@ -211,8 +256,10 @@ CLI 通过 Cloudflare Worker API 操作，使用 CRAWLER 权限 Token。统一�
     "id": 12,
     "title": "某漫画",
     "category": "动作",
+    "description": "作品简介",
     "cover_r2_path": "komichi/covers/12.jpg",
-    "source_url": "D:/comics/某漫画",
+    "source": "mh160mh",
+    "source_url": "https://www.mh160mh.com/kanmanhua/94/",
     "latest_chapter_num": 2,
     "status": "ongoing"
   },
@@ -255,9 +302,11 @@ komichi/
 
 ## 数据库结构（Worker 侧）
 
-- `works`: id, title, category, cover_r2_path, source_url, latest_chapter_num, status, create_time
+- `works`: id, title, category, description, cover_r2_path, source_url, latest_chapter_num, status, create_time
 - `chapters`: id, work_id, chapter_num, chapter_title, create_time
 - `chapter_images`: id, chapter_id, image_index, r2_path
+
+> 升级已有数据库：`npx wrangler d1 execute komichi --file=./migrations/003_add_work_description.sql`
 
 ## 项目结构
 
@@ -272,8 +321,15 @@ cli/
 │   │   └── client.py     # API 客户端，封装所有 HTTP 请求
 │   ├── crawler/
 │   │   ├── __init__.py
-│   │   ├── base.py       # 爬虫基类（接口定义）与数据模型
-│   │   └── generic.py    # 通用爬虫（本地文件夹 / URL 列表）
+│   │   ├── base.py       # 爬虫基类（接口定义）与数据模型 / 异常体系
+│   │   ├── registry.py   # 源注册表 + URL 域名匹配 + 多源自动换备
+│   │   ├── generic.py    # 通用爬虫（本地文件夹 / URL 列表）
+│   │   ├── godamh.py     # godamh.com 站点爬虫
+│   │   ├── mh160mh.py    # 漫画160 (mh160mh.com) 站点爬虫
+│   │   ├── guazi.py      # 瓜子漫画 (guazimanhua.com) 站点爬虫
+│   │   ├── kuaikan.py    # 快看漫画 (kuaikanmanhua.com) 站点爬虫
+│   │   ├── tencent.py    # 腾讯动漫 (ac.qq.com) 站点爬虫
+│   │   └── bilibili.py   # 哔哩哔哩漫画 (manga.bilibili.com) 站点爬虫（Playwright）
 │   └── uploader/
 │       ├── __init__.py
 │       └── r2_uploader.py # R2 上传器（通过 Worker API 上传）

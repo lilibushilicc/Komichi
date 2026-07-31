@@ -274,7 +274,8 @@ private fun DetailContent(
         }
 
         // 简介
-        if (work.summary.isNotBlank()) {
+        val intro = work.summary.ifBlank { work.description }
+        if (intro.isNotBlank()) {
             item {
                 Column(
                     modifier = Modifier
@@ -292,7 +293,7 @@ private fun DetailContent(
                     )
                     Spacer(Modifier.size(8.dp))
                     Text(
-                        text = work.summary,
+                        text = intro,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

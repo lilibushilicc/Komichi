@@ -49,7 +49,9 @@ export interface WorkRow {
   id: number;
   title: string;
   category: string | null;
+  description: string | null;
   cover_r2_path: string | null;
+  source: string | null;
   source_url: string | null;
   latest_chapter_num: number;
   status: string;
@@ -93,7 +95,9 @@ export interface WorkUpdateInput {
   id?: number;
   title: string;
   category?: string;
+  description?: string;
   cover_r2_path?: string;
+  source?: string;
   source_url?: string;
   status?: string;
   chapters?: ChapterInput[];

@@ -6,8 +6,11 @@
     komichi-cli init                       初始化配置
     komichi-cli config show                显示当前配置
     komichi-cli config set <key> <value>   设置配置项
+    komichi-cli source list                列出所有可用源
     komichi-cli import local <path>        从本地文件夹导入漫画
     komichi-cli import url <work_url>      从 URL 导入漫画（预留接口）
+    komichi-cli import from <src> <query>  从指定源导入（src: godamh/mh160mh/...）
+    komichi-cli import <url|keyword>       自动识别源（URL 按域名 / 关键词按优先级换备）
     komichi-cli upload images <work_dir>   上传指定作品的图片到 R2
     komichi-cli sync work <work_id>        同步作品数据到 Worker
     komichi-cli sync all                   同步所有本地数据
@@ -17,6 +20,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from typing import Any, Dict, List, Optional, Tuple
 
 import click
@@ -28,7 +32,17 @@ from rich.table import Table
 from . import config
 from .api import APIClient
 from .api.client import APIError, NetworkError
-from .crawler import GodamhCrawler, LocalCrawler, UrlCrawler, WorkInfo
+from .crawler import (
+    CrawlError,
+    GodamhCrawler,
+    LocalCrawler,
+    SourceNotFound,
+    UrlCrawler,
+    WorkInfo,
+    crawl_with_fallback,
+    describe_sources,
+    get_crawler,
+)
 from .uploader import R2Uploader
 
 console = Console()
@@ -37,13 +51,15 @@ console = Console()
 # ============================================================
 # 数据转换工具函数
 # ============================================================
-def work_to_staging(work: WorkInfo) -> Dict[str, Any]:
+def work_to_staging(work: WorkInfo, source: str = "") -> Dict[str, Any]:
     """将 WorkInfo 转换为可序列化的本地暂存字典"""
     return {
         "slug": config.slugify(work.title),
         "work_id": None,
         "title": work.title,
         "category": work.category,
+        "description": work.description,
+        "source": source or "",
         "source_url": work.source_url,
         "cover_path": work.cover_path,
         "cover_r2_path": work.cover_r2_path,
@@ -70,6 +86,8 @@ def build_work_payload(
         "id": staging.get("work_id"),
         "title": staging.get("title", ""),
         "category": staging.get("category", ""),
+        "description": staging.get("description", ""),
+        "source": staging.get("source", ""),
         "cover_r2_path": staging.get("cover_r2_path") or "",
         "source_url": staging.get("source_url", ""),
         "latest_chapter_num": latest,
@@ -197,9 +215,61 @@ def config_set(key: str, value: str) -> None:
 
 
 # -------------------- import --------------------
-@cli.group(name="import")
+class ImportGroup(click.Group):
+    """import 命令组：支持 `import <URL|关键词>` 直接自动选择源
+
+    首参不是已注册子命令（local/url/from/godamh）时，
+    视为 URL 或关键词交给自动导入命令（按域名识别 / 按优先级换备）。
+    """
+
+    def get_command(self, ctx, cmd_name):
+        cmd = super().get_command(ctx, cmd_name)
+        if cmd is not None:
+            return cmd
+        ctx.meta.setdefault("auto_query", []).append(cmd_name)
+        return import_auto
+
+
+def _show_import_result(work: WorkInfo, source: str = "") -> None:
+    """打印导入结果面板 + 章节表格"""
+    desc = work.description.strip()
+    desc_block = f"简介: {desc[:200]}{'...' if len(desc) > 200 else ''}\n" if desc else ""
+    console.print(
+        Panel.fit(
+            f"[bold]{work.title}[/bold]\n"
+            f"来源: {source or '(未设置)'}\n"
+            f"分类: {work.category or '(未设置)'}\n"
+            f"{desc_block}"
+            f"封面: {work.cover_path or '(无)'}\n"
+            f"章节数: {len(work.chapters)}",
+            title="导入结果",
+        )
+    )
+    if work.chapters:
+        table = Table(title="章节列表")
+        table.add_column("章节号", justify="right", style="cyan")
+        table.add_column("标题")
+        for c in work.chapters[:10]:
+            table.add_row(str(c.chapter_num), c.chapter_title)
+        console.print(table)
+        if len(work.chapters) > 10:
+            console.print(f"[dim]...共 {len(work.chapters)} 话，仅显示前 10 话[/dim]")
+
+
+def _save_import_result(work: WorkInfo, source: str = "") -> None:
+    """保存导入结果到本地暂存，返回 (out_path, slug)"""
+    staging = work_to_staging(work, source=source)
+    out, slug = config.save_staging(staging)
+    console.print(f"[green]已保存本地暂存: {slug}[/green]")
+    console.print(f"[dim]暂存文件: {out}[/dim]")
+    console.print(
+        "[dim]下一步: komichi-cli sync work <slug>  同步到 Worker（将自动下载封面上传到 R2）[/dim]"
+    )
+
+
+@cli.group(name="import", cls=ImportGroup)
 def import_group() -> None:
-    """导入漫画"""
+    """导入漫画（多源，URL 自动识别 / 关键词自动换备）"""
     pass
 
 
@@ -246,7 +316,7 @@ def import_local(path: str, title: Optional[str], category: str, cover: Optional
             table.add_row(str(c.chapter_num), c.chapter_title)
         console.print(table)
 
-    staging = work_to_staging(work)
+    staging = work_to_staging(work, source="local")
     out, slug = config.save_staging(staging)
     console.print(f"[green]已保存本地暂存: {slug}[/green]")
     console.print(f"[dim]暂存文件: {out}[/dim]")
@@ -276,7 +346,7 @@ def import_url(work_url: str, title: Optional[str], category: str) -> None:
     console.print(
         f"[green]导入成功: {work.title} | 章节 {len(work.chapters)}[/green]"
     )
-    staging = work_to_staging(work)
+    staging = work_to_staging(work, source="url")
     out, slug = config.save_staging(staging)
     console.print(f"[green]已保存本地暂存: {slug}[/green]")
     console.print(f"[dim]暂存文件: {out}[/dim]")
@@ -288,41 +358,168 @@ def import_url(work_url: str, title: Optional[str], category: str) -> None:
 @click.option("--category", default="", help="作品分类")
 @click.option("--cover", default=None, help="封面 URL（默认从网页抓取）")
 def import_godamh(keyword: str, title: Optional[str], category: str, cover: Optional[str]) -> None:
-    """从 godamh.com 导入漫画（爬取封面 URL + 章节名称，不下载图片）"""
-    console.print(f"[cyan]在 godamh.com 搜索: {keyword}[/cyan]")
-    crawler = GodamhCrawler(source=keyword, title=title or "", category=category, cover=cover or "")
+    """从 godamh.com 导入漫画（等价于 `import from godamh <keyword>`）"""
+    _import_from_source("godamh", keyword, title=title, category=category, cover=cover)
+
+
+@import_group.command("from")
+@click.argument("source")
+@click.argument("query")
+@click.option("--title", default=None, help="作品标题（默认从网页抓取）")
+@click.option("--category", default="", help="作品分类")
+@click.option("--cover", default=None, help="封面 URL（默认从网页抓取）")
+def import_from(source: str, query: str, title: Optional[str], category: str, cover: Optional[str]) -> None:
+    """从指定源导入漫画（SOURCE: godamh / mh160mh / ...）
+
+    QUERY 为作品 URL 或关键词（取决于源是否支持站内搜索）。
+    """
+    _import_from_source(source, query, title=title, category=category, cover=cover)
+
+
+@import_group.command("auto", hidden=True)
+@click.option("--title", default=None, help="作品标题（默认从网页抓取）")
+@click.option("--category", default="", help="作品分类")
+@click.option("--cover", default=None, help="封面 URL（默认从网页抓取）")
+@click.option(
+    "--sources",
+    default=None,
+    help="指定源顺序，如 godamh,mh160mh（默认按配置 source_priority 自动换备）",
+)
+@click.option("--yes", "assume_yes", is_flag=True, help="跳过抓取结果确认（默认交互式确认）")
+@click.argument("query", nargs=-1, required=False)
+@click.pass_context
+def import_auto(ctx: click.Context, query: Tuple[str, ...], title: Optional[str], category: str, cover: Optional[str], sources: Optional[str], assume_yes: bool) -> None:
+    """自动导入：URL 按域名识别源，关键词按优先级换备（内部命令）"""
+    extra = ctx.meta.get("auto_query", [])
+    q = (" ".join(extra) + " " + " ".join(query)).strip()
+    if not q:
+        raise click.ClickException("缺少作品 URL 或关键词，例如: komichi-cli import https://xxx / komichi-cli import 海贼王")
+    _import_auto(q, title=title, category=category, cover=cover, sources=sources, assume_yes=assume_yes)
+
+
+def _build_confirm(keyword: str, assume_yes: bool) -> Optional[Any]:
+    """构造抓取结果确认回调。
+
+    仅对关键词导入、且终端为交互式（stdin 为 TTY）且未加 --yes 时启用。
+    """
+    if assume_yes:
+        return None
     try:
+        interactive = sys.stdin.isatty()
+    except (AttributeError, OSError):
+        interactive = False
+    if not interactive:
+        return None
+
+    def confirm(name: str, work: WorkInfo) -> bool:
+        desc = work.description.strip()
+        desc_block = f"简介: {desc[:120]}{'...' if len(desc) > 120 else ''}\n" if desc else ""
+        console.print(
+            Panel.fit(
+                f"[bold]{work.title}[/bold]\n"
+                f"来源: {name}\n"
+                f"分类: {work.category or '(未设置)'}    "
+                f"状态: {'已完结' if work.status == 'completed' else '连载中'}\n"
+                f"{desc_block}"
+                f"章节数: {len(work.chapters)}\n"
+                f"链接: {work.source_url}",
+                title=f"关键词「{keyword}」匹配结果",
+            )
+        )
+        return click.confirm("就是这个作品？", default=True)
+
+    return confirm
+
+
+def _import_auto(
+    query: str,
+    title: Optional[str] = None,
+    category: str = "",
+    cover: Optional[str] = None,
+    sources: Optional[str] = None,
+    assume_yes: bool = False,
+) -> None:
+    """自动导入：URL 域名识别 / 关键词按优先级换备（关键词时交互式确认）"""
+    console.print(f"[cyan]自动导入: {query}[/cyan]")
+    is_keyword = not query.strip().lower().startswith(("http://", "https://"))
+    confirm = _build_confirm(query.strip(), assume_yes) if is_keyword else None
+    try:
+        work, source = crawl_with_fallback(
+            query,
+            sources=sources,
+            title=title or "",
+            category=category,
+            cover=cover or "",
+            confirm=confirm,
+        )
+    except SourceNotFound as e:
+        raise click.ClickException(str(e))
+    console.print(f"[green]来源: {source}[/green]")
+    _show_import_result(work, source)
+    _save_import_result(work, source)
+
+
+def _import_from_source(
+    source: str,
+    query: str,
+    title: Optional[str] = None,
+    category: str = "",
+    cover: Optional[str] = None,
+) -> None:
+    """从指定源导入并保存暂存"""
+    console.print(f"[cyan]从源 {source} 导入: {query}[/cyan]")
+    try:
+        crawler = get_crawler(
+            source, query, title=title or "", category=category, cover=cover or ""
+        )
         work = crawler.crawl()
-    except ValueError as e:
+    except (CrawlError, ValueError, NotImplementedError) as e:
         raise click.ClickException(str(e))
     except Exception as e:
         raise click.ClickException(f"爬取失败: {e}")
+    _show_import_result(work, source)
+    _save_import_result(work, source)
 
-    console.print(
-        Panel.fit(
-            f"[bold]{work.title}[/bold]\n"
-            f"分类: {work.category or '(未设置)'}\n"
-            f"封面: {work.cover_path or '(无)'}\n"
-            f"章节数: {len(work.chapters)}",
-            title="导入结果",
+
+# -------------------- source --------------------
+@cli.group(name="source")
+def source_group() -> None:
+    """源管理（多源爬虫）"""
+    pass
+
+
+@source_group.command("list")
+def source_list() -> None:
+    """列出所有可用爬虫源及其域名"""
+    items = describe_sources()
+    if not items:
+        console.print("[yellow]暂无可用源[/yellow]")
+        return
+    table = Table(title=f"可用源 (共 {len(items)} 个)")
+    table.add_column("源名", style="cyan", no_wrap=True)
+    table.add_column("展示名")
+    table.add_column("域名")
+    table.add_column("配置优先级", justify="center")
+    prio = config.get("source_priority", [])
+    if isinstance(prio, str):
+        prio = [p.strip() for p in prio.split(",") if p.strip()]
+    prio_list = list(prio) if isinstance(prio, (list, tuple)) else []
+    for name, display, domains in items:
+        idx = ""
+        if name in prio_list:
+            idx = str(prio_list.index(name) + 1)
+        table.add_row(
+            name,
+            display,
+            ", ".join(domains) or "-",
+            idx,
         )
-    )
-
-    if work.chapters:
-        table = Table(title="章节列表")
-        table.add_column("章节号", justify="right", style="cyan")
-        table.add_column("标题")
-        for c in work.chapters[:10]:
-            table.add_row(str(c.chapter_num), c.chapter_title)
-        console.print(table)
-        if len(work.chapters) > 10:
-            console.print(f"[dim]...共 {len(work.chapters)} 话，仅显示前 10 话[/dim]")
-
-    staging = work_to_staging(work)
-    out, slug = config.save_staging(staging)
-    console.print(f"[green]已保存本地暂存: {slug}[/green]")
-    console.print(f"[dim]暂存文件: {out}[/dim]")
-    console.print("[dim]下一步: komichi-cli sync work <slug>  同步到 Worker（将自动下载封面上传到 R2）[/dim]")
+    console.print(table)
+    if prio_list:
+        console.print(
+            f"[dim]当前优先级: {', '.join(prio_list)}"
+            f"（调整: komichi-cli config set source_priority {','.join(prio_list)}）[/dim]"
+        )
 
 
 # -------------------- upload --------------------
@@ -515,7 +712,8 @@ def check(work_id: str) -> None:
             f"[bold]{rwork.get('title', '')}[/bold]\n"
             f"ID: {rwork.get('id', work_id)}    分类: {rwork.get('category', '')}\n"
             f"最新章节: {rwork.get('latest_chapter_num', '?')}    状态: {rwork.get('status', '')}\n"
-            f"封面: {rwork.get('cover_r2_path', '(无)')}",
+            f"封面: {rwork.get('cover_r2_path', '(无)')}\n"
+            f"简介: {(rwork.get('description', '') or '(无)')[:120]}",
             title="Worker 远程状态",
         )
     )

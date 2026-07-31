@@ -35,6 +35,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "request_timeout": 30,     # 单次请求超时（秒）
     "max_retries": 3,          # 网络错误最大重试次数
     "staging_dir": "",         # 本地暂存目录（空=使用默认 ~/.komichi/staging/）
+    "source_priority": ["godamh", "mh160mh", "guazi", "kuaikan", "tencent", "bilibili"],  # 站点源优先级（关键词导入时按序自动换备）
 }
 
 

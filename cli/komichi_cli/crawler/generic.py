@@ -9,7 +9,8 @@ from typing import List, Optional
 import httpx
 
 from ..api.client import NetworkError
-from .base import BaseCrawler, ChapterInfo, WorkInfo
+from .base import BaseCrawler, ChapterInfo, SourceUnavailable, WorkInfo
+from .registry import register_source
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"}
 
@@ -24,8 +25,12 @@ def _parse_chapter_num(name: str) -> Optional[int]:
     return int(m.group(1)) if m else None
 
 
+@register_source
 class LocalCrawler(BaseCrawler):
     """本地文件夹爬虫：扫描子文件夹作为章节，不采集图片"""
+
+    name = "local"
+    display_name = "本地文件夹"
 
     def __init__(self, source: str, title: str = "", category: str = "", cover: str = ""):
         super().__init__(source, title, category, cover)
@@ -90,8 +95,12 @@ class LocalCrawler(BaseCrawler):
         return chapters
 
 
+@register_source
 class UrlCrawler(BaseCrawler):
     """URL 列表爬虫（预留接口框架）"""
+
+    name = "url"
+    display_name = "URL 列表/Manifest"
 
     def crawl(self) -> WorkInfo:
         src = self.source

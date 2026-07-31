@@ -98,7 +98,13 @@ r2.get('/proxy', async (c) => {
   headers.set('Cache-Control', 'public, max-age=86400');
   headers.set('ETag', object.httpEtag);
 
-  return c.body(object.body, 200, headers);
+  // Hono 的 c.body 第三参要求 HeaderRecord（普通对象），需从 Headers 转换
+  const headerRecord: Record<string, string> = {};
+  headers.forEach((value, key) => {
+    headerRecord[key] = value;
+  });
+
+  return c.body(object.body, 200, headerRecord);
 });
 
 /**
