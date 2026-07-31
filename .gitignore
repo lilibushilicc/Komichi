@@ -1,0 +1,42 @@
+# ── Android / Gradle ──
+android/app/build/
+android/build/
+android/.gradle/
+android/.kotlin/
+android/local.properties
+*.apk
+*.aab
+*.dex
+*.class
+
+# ── Node.js / Worker ──
+worker/node_modules/
+worker/.wrangler/
+worker/.dev.vars
+
+# ── Python / CLI ──
+cli/**/__pycache__/
+cli/*.egg-info/
+cli/staging/
+*.pyc
+*.pyo
+
+# ── IDE (keep project config, ignore user-specific) ──
+.idea/workspace.xml
+.idea/deploymentTargetSelector.xml
+.idea/runConfigurations.xml
+android/.idea/workspace.xml
+android/.idea/deploymentTargetSelector.xml
+android/.idea/runConfigurations.xml
+
+# ── Debug / Logs ──
+.playwright-mcp/
+*.log
+
+# ── UI Reports ──
+komichi-ui/*-report.json
+komichi-ui/*-summary.json
+
+# ── OS ──
+.DS_Store
+Thumbs.db

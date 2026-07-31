@@ -1,0 +1,629 @@
+{
+  "data": [
+    {
+      "id": "page-home",
+      "type": "page",
+      "title": "首页",
+      "version": 1,
+      "createdAt": 1753708800000,
+      "canvasData": {
+        "x": 618,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 4290,
+          "viewportWidth": 375,
+          "sourceHash": "fnv1a-a5c3049f",
+          "measuredAt": 1785334623764
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/home.html",
+        "interactions": [
+          {
+            "domId": "nav-shelf",
+            "targetPageId": "page-shelf",
+            "hideEdge": true,
+            "transitionLabel": "书架"
+          },
+          {
+            "domId": "nav-history",
+            "targetPageId": "page-history",
+            "hideEdge": true,
+            "transitionLabel": "历史"
+          },
+          {
+            "domId": "nav-settings",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "设置"
+          },
+          {
+            "domId": "card-continue",
+            "targetPageId": "page-reader",
+            "transitionLabel": "继续阅读"
+          },
+          {
+            "domId": "btn-continue",
+            "targetPageId": "page-reader",
+            "transitionLabel": "继续阅读"
+          },
+          {
+            "domId": "card-update-1",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "card-update-2",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "card-update-3",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "card-update-4",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "card-popular-1",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "card-popular-2",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "card-popular-3",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-shelf",
+      "type": "page",
+      "title": "书架",
+      "version": 1,
+      "createdAt": 1753708800000,
+      "canvasData": {
+        "x": 309,
+        "y": 376,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 1466,
+          "viewportWidth": 375,
+          "sourceHash": "fnv1a-a7f2d70e",
+          "measuredAt": 1785334488265
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/shelf.html",
+        "interactions": [
+          {
+            "domId": "nav-home",
+            "targetPageId": "page-home",
+            "hideEdge": true,
+            "transitionLabel": "首页"
+          },
+          {
+            "domId": "nav-history",
+            "targetPageId": "page-history",
+            "hideEdge": true,
+            "transitionLabel": "历史"
+          },
+          {
+            "domId": "nav-settings",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "设置"
+          },
+          {
+            "domId": "btn-discover",
+            "targetPageId": "page-home",
+            "transitionLabel": "发现作品"
+          },
+          {
+            "domId": "cover-grid-1",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "cover-grid-2",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "cover-grid-3",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "cover-grid-4",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "cover-grid-5",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "cover-grid-6",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "cover-grid-7",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "cover-grid-8",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "list-row-1",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "list-row-2",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "list-row-3",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "list-row-4",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-detail",
+      "type": "page",
+      "title": "漫画详情",
+      "version": 1,
+      "createdAt": 1753708800000,
+      "canvasData": {
+        "x": 927,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 1069,
+          "viewportWidth": 375,
+          "sourceHash": "fnv1a-1d21ccb4",
+          "measuredAt": 1785334488265
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/detail.html",
+        "interactions": [
+          {
+            "domId": "nav-home",
+            "targetPageId": "page-home",
+            "hideEdge": true,
+            "transitionLabel": "首页"
+          },
+          {
+            "domId": "nav-shelf",
+            "targetPageId": "page-shelf",
+            "hideEdge": true,
+            "transitionLabel": "书架"
+          },
+          {
+            "domId": "nav-history",
+            "targetPageId": "page-history",
+            "hideEdge": true,
+            "transitionLabel": "历史"
+          },
+          {
+            "domId": "nav-settings",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "设置"
+          },
+          {
+            "domId": "btn-back",
+            "targetPageId": "page-home",
+            "hideEdge": true,
+            "transitionLabel": "返回"
+          },
+          {
+            "domId": "btn-read",
+            "targetPageId": "page-reader",
+            "transitionLabel": "开始阅读"
+          },
+          {
+            "domId": "chapter-1",
+            "targetPageId": "page-reader",
+            "transitionLabel": "阅读本章"
+          },
+          {
+            "domId": "chapter-2",
+            "targetPageId": "page-reader",
+            "transitionLabel": "阅读本章"
+          },
+          {
+            "domId": "chapter-3",
+            "targetPageId": "page-reader",
+            "transitionLabel": "阅读本章"
+          },
+          {
+            "domId": "chapter-4",
+            "targetPageId": "page-reader",
+            "transitionLabel": "阅读本章"
+          },
+          {
+            "domId": "chapter-5",
+            "targetPageId": "page-reader",
+            "transitionLabel": "阅读本章"
+          },
+          {
+            "domId": "chapter-6",
+            "targetPageId": "page-reader",
+            "transitionLabel": "阅读本章"
+          },
+          {
+            "domId": "chapter-7",
+            "targetPageId": "page-reader",
+            "transitionLabel": "阅读本章"
+          },
+          {
+            "domId": "chapter-8",
+            "targetPageId": "page-reader",
+            "transitionLabel": "阅读本章"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-reader",
+      "type": "page",
+      "title": "阅读器",
+      "version": 1,
+      "createdAt": 1753708800000,
+      "canvasData": {
+        "x": 1236,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 1715,
+          "viewportWidth": 375,
+          "sourceHash": "fnv1a-0e46b679",
+          "measuredAt": 1785334488265
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/reader.html",
+        "interactions": [
+          {
+            "domId": "btn-back",
+            "targetPageId": "page-detail",
+            "hideEdge": true,
+            "transitionLabel": "返回详情"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-settings",
+      "type": "page",
+      "title": "设置",
+      "version": 1,
+      "createdAt": 1753708800000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 1811,
+          "viewportWidth": 375,
+          "sourceHash": "fnv1a-0da5239f",
+          "measuredAt": 1785334623764
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/settings.html",
+        "interactions": [
+          {
+            "domId": "nav-home",
+            "targetPageId": "page-home",
+            "hideEdge": true,
+            "transitionLabel": "首页"
+          },
+          {
+            "domId": "nav-shelf",
+            "targetPageId": "page-shelf",
+            "hideEdge": true,
+            "transitionLabel": "书架"
+          },
+          {
+            "domId": "nav-history",
+            "targetPageId": "page-history",
+            "hideEdge": true,
+            "transitionLabel": "历史"
+          },
+          {
+            "domId": "btn-logout",
+            "targetPageId": "page-login",
+            "transitionLabel": "退出登录"
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-login",
+      "type": "page",
+      "title": "登录",
+      "version": 1,
+      "createdAt": 1753708800000,
+      "canvasData": {
+        "x": 309,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 900,
+          "viewportWidth": 375,
+          "sourceHash": "fnv1a-5551a94f",
+          "measuredAt": 1785334488265
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/login.html",
+        "interactions": [
+          {
+            "domId": "btn-login",
+            "targetPageId": "page-home",
+            "transitionLabel": "登录成功"
+          }
+        ]
+      }
+    },
+    {
+      "id": "image-001",
+      "type": "image",
+      "title": "cover-01",
+      "version": 1,
+      "createdAt": 1753708800000,
+      "canvasData": {
+        "x": 0,
+        "y": 1865,
+        "naturalSize": {
+          "width": 1680,
+          "height": 2240
+        }
+      },
+      "devMetadata": {
+        "imageSrc": "assets/covers/cover-01.jpg"
+      }
+    },
+    {
+      "id": "image-002",
+      "type": "image",
+      "title": "cover-02",
+      "version": 1,
+      "createdAt": 1753708800000,
+      "canvasData": {
+        "x": 309,
+        "y": 1865,
+        "naturalSize": {
+          "width": 1680,
+          "height": 2240
+        }
+      },
+      "devMetadata": {
+        "imageSrc": "assets/covers/cover-02.jpg"
+      }
+    },
+    {
+      "id": "image-003",
+      "type": "image",
+      "title": "cover-03",
+      "version": 1,
+      "createdAt": 1753708800000,
+      "canvasData": {
+        "x": 618,
+        "y": 1865,
+        "naturalSize": {
+          "width": 1680,
+          "height": 2240
+        }
+      },
+      "devMetadata": {
+        "imageSrc": "assets/covers/cover-03.jpg"
+      }
+    },
+    {
+      "id": "image-004",
+      "type": "image",
+      "title": "cover-04",
+      "version": 1,
+      "createdAt": 1753708800000,
+      "canvasData": {
+        "x": 927,
+        "y": 1865,
+        "naturalSize": {
+          "width": 1680,
+          "height": 2240
+        }
+      },
+      "devMetadata": {
+        "imageSrc": "assets/covers/cover-04.jpg"
+      }
+    },
+    {
+      "id": "image-005",
+      "type": "image",
+      "title": "cover-05",
+      "version": 1,
+      "createdAt": 1753708800000,
+      "canvasData": {
+        "x": 1236,
+        "y": 1865,
+        "naturalSize": {
+          "width": 1680,
+          "height": 2240
+        }
+      },
+      "devMetadata": {
+        "imageSrc": "assets/covers/cover-05.jpg"
+      }
+    },
+    {
+      "id": "image-006",
+      "type": "image",
+      "title": "cover-06",
+      "version": 1,
+      "createdAt": 1753708800000,
+      "canvasData": {
+        "x": 1545,
+        "y": 1865,
+        "naturalSize": {
+          "width": 1680,
+          "height": 2240
+        }
+      },
+      "devMetadata": {
+        "imageSrc": "assets/covers/cover-06.jpg"
+      }
+    },
+    {
+      "id": "image-007",
+      "type": "image",
+      "title": "cover-07",
+      "version": 1,
+      "createdAt": 1753708800000,
+      "canvasData": {
+        "x": 1854,
+        "y": 1865,
+        "naturalSize": {
+          "width": 1680,
+          "height": 2240
+        }
+      },
+      "devMetadata": {
+        "imageSrc": "assets/covers/cover-07.jpg"
+      }
+    },
+    {
+      "id": "image-008",
+      "type": "image",
+      "title": "cover-08",
+      "version": 1,
+      "createdAt": 1753708800000,
+      "canvasData": {
+        "x": 2163,
+        "y": 1865,
+        "naturalSize": {
+          "width": 1680,
+          "height": 2240
+        }
+      },
+      "devMetadata": {
+        "imageSrc": "assets/covers/cover-08.jpg"
+      }
+    },
+    {
+      "id": "page-history",
+      "type": "page",
+      "title": "历史",
+      "version": 1,
+      "createdAt": 1785331236418,
+      "canvasData": {
+        "x": 618,
+        "y": 531,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 900,
+          "viewportWidth": 375,
+          "sourceHash": "fnv1a-55b9d083",
+          "measuredAt": 1785334488265
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/history.html",
+        "interactions": [
+          {
+            "domId": "nav-home",
+            "targetPageId": "page-home",
+            "hideEdge": true,
+            "transitionLabel": "首页"
+          },
+          {
+            "domId": "nav-shelf",
+            "targetPageId": "page-shelf",
+            "hideEdge": true,
+            "transitionLabel": "书架"
+          },
+          {
+            "domId": "nav-settings",
+            "targetPageId": "page-settings",
+            "hideEdge": true,
+            "transitionLabel": "设置"
+          },
+          {
+            "domId": "history-1",
+            "targetPageId": "page-reader",
+            "transitionLabel": "继续阅读"
+          },
+          {
+            "domId": "history-2",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "history-3",
+            "targetPageId": "page-reader",
+            "transitionLabel": "继续阅读"
+          },
+          {
+            "domId": "history-4",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          },
+          {
+            "domId": "history-5",
+            "targetPageId": "page-detail",
+            "transitionLabel": "漫画详情"
+          }
+        ]
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "mobile",
+    "designLibrary": {
+      "name": "Nimbus Core",
+      "id": "dl_builtin_trae",
+      "version": null,
+      "scope": "built-in-global",
+      "path": "c:\\Users\\zt417\\.trae-cn\\design_libraries\\dl_builtin_trae",
+      "versionSource": "selected-context"
+    },
+    "projectName": "Komichi 漫追",
+    "showEdge": true,
+    "visualEditorEnabled": true
+  }
+}

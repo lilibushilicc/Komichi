@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark reading palette -->
+    <color name="ct_background">#FF101012</color>
+    <color name="ct_surface">#FF1A1A1E</color>
+    <color name="ct_surface_variant">#FF242428</color>
+    <color name="ct_primary">#FF8AB4F8</color>
+    <color name="ct_on_primary">#FF002F5D</color>
+    <color name="ct_on_background">#FFE8E8EA</color>
+    <color name="ct_on_surface">#FFE8E8EA</color>
+    <color name="ct_secondary">#FFB9C9DA</color>
+    <color name="ct_outline">#FF3A3A3F</color>
+    <color name="ct_error">#FFCF6679</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="ic_launcher_background">#FF101012</color>
+</resources>

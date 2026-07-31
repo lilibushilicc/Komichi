@@ -1,0 +1,4 @@
+click>=8.0.0
+httpx>=0.24.0
+rich>=13.0.0
+# pathlib 是 Python 标准库（3.4+）的一部分，无需单独安装

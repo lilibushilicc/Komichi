@@ -1,0 +1,37 @@
+name = "komichi-worker"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+
+
+
+# D1 数据库绑定
+# 首次使用需执行: npx wrangler d1 create komichi
+# 然后将返回的 database_id 填入下方
+# 初始化表: npx wrangler d1 execute komichi --file=./schema.sql --remote
+[[d1_databases]]
+binding = "DB"
+database_name = "komichi"
+database_id = "0510471d-bb41-4c64-b4f1-3bf589b85b97"
+
+# R2 对象存储绑定（图片存储）
+# 首次使用需执行: npx wrangler r2 bucket create komichi-images
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "komichi-images"
+
+# 可观测性
+[observability]
+enabled = true
+
+# 本地开发环境变量覆盖（仅 wrangler dev 生效）
+[env.local]
+name = "komichi-worker-local"
+
+[[env.local.d1_databases]]
+binding = "DB"
+database_name = "komichi"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+[[env.local.r2_buckets]]
+binding = "BUCKET"
+bucket_name = "komichi-images"
