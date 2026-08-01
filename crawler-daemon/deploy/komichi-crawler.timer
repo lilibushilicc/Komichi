@@ -1,0 +1,13 @@
+[Unit]
+Description=Run Komichi remote crawler twice daily
+
+[Timer]
+# 每天 06:00 和 18:00 各运行一次（错开 Worker 自身 cron 0 */6 * * *）
+OnCalendar=*-*-* 06,18:00:00
+# 错过的执行在下次启动时补上
+Persistent=true
+# 随机延迟 0~10 分钟，避免整点突发
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

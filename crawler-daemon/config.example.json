@@ -1,0 +1,11 @@
+{
+  "worker_url": "https://komichi-worker.xxx.workers.dev",
+  "username": "crawler",
+  "password": "crawler123",
+  "token": "",
+  "request_timeout": 60,
+  "max_retries": 3,
+  "playwright_timeout": 45000,
+  "log_file": "logs/crawler.log",
+  "state_file": "logs/state.json"
+}

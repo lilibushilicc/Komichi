@@ -1,3 +1,8 @@
+"""本地 / URL 清单爬虫（非站点源，仅供 CLI 导入使用）
+
+- LocalCrawler: 扫描本地文件夹（子文件夹作为章节）
+- UrlCrawler:   从本地/远程 .txt 图片URL列表 或 .json manifest 导入
+"""
 from __future__ import annotations
 
 import json
@@ -8,9 +13,9 @@ from typing import List, Optional
 
 import httpx
 
-from ..api.client import NetworkError
 from .base import BaseCrawler, ChapterInfo, SourceUnavailable, WorkInfo
 from .registry import register_source
+from .worker_api import NetworkError
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"}
 

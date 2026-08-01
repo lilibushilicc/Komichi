@@ -1,0 +1,19 @@
+[Unit]
+Description=Komichi remote crawler (bilibili -> Cloudflare)
+Documentation=https://github.com/lilibushilicc/Komichi
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=komichi
+WorkingDirectory=/opt/komichi-crawler
+EnvironmentFile=/opt/komichi-crawler/crawler.env
+ExecStart=/opt/komichi-crawler/.venv/bin/python -m komichi_crawler refresh
+# Playwright + Chromium 启动较慢，给足时间
+TimeoutStartSec=30min
+# 内存上限（Chromium 较吃内存，建议 2G 起）
+MemoryMax=2G
+# 日志走 journald，可用 journalctl -u komichi-crawler 查看
+StandardOutput=journal
+StandardError=journal

@@ -1,0 +1,6 @@
+# supercronic 格式与标准 crontab 相同
+# 参考: https://github.com/aptible/supercronic
+#
+# 容器内默认工作目录 /app，日志写到 /app/logs
+
+0 6,18 * * * python -m komichi_crawler refresh >> /app/logs/cron.log 2>&1

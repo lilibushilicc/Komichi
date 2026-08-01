@@ -1,0 +1,37 @@
+# Komichi 远程爬虫 — Docker Compose
+#
+# 使用方式:
+#   1. 复制 .env.example 为 .env，填写 Worker 凭据
+#   2. 手动运行一次追更:   docker compose run --rm crawler refresh
+#   3. 导入新作品:         docker compose run --rm crawler import "https://manga.bilibili.com/detail/mc24742"
+#   4. 启动定时调度器:     docker compose up -d scheduler
+#   5. 查看日志:           docker compose logs -f scheduler  或  docker compose exec scheduler cat /app/logs/cron.log
+
+services:
+  crawler:
+    build: .
+    image: komichi-crawler
+    environment:
+      - KOMICHI_WORKER_URL=${KOMICHI_WORKER_URL}
+      - KOMICHI_USERNAME=${KOMICHI_USERNAME}
+      - KOMICHI_PASSWORD=${KOMICHI_PASSWORD}
+    volumes:
+      - ./logs:/app/logs
+      - ./config.json:/app/config.json:ro
+
+  # 定时调度器（容器内 supercronic，无需宿主机 cron）
+  # 适合纯容器平台（fly.io / Railway / 容器化 VPS）
+  scheduler:
+    image: komichi-crawler
+    depends_on:
+      - crawler
+    environment:
+      - KOMICHI_WORKER_URL=${KOMICHI_WORKER_URL}
+      - KOMICHI_USERNAME=${KOMICHI_USERNAME}
+      - KOMICHI_PASSWORD=${KOMICHI_PASSWORD}
+    volumes:
+      - ./logs:/app/logs
+      - ./config.json:/app/config.json:ro
+      - ./deploy/supercronic-cron:/etc/supercronic/cron:ro
+    entrypoint: ["/usr/local/bin/supercronic", "-passthrough-logs", "/etc/supercronic/cron"]
+    restart: unless-stopped

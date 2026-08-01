@@ -1,0 +1,19 @@
+# Komichi 远程爬虫 — crontab 示例
+#
+# 安装: crontab -e  然后粘贴下面的内容（去掉 # 注释）
+# 日志: logs/cron.log
+# 状态: logs/state.json
+#
+# 路径请按实际安装位置调整，下方假设装在 /opt/komichi-crawler
+
+SHELL=/bin/bash
+PATH=/opt/komichi-crawler/.venv/bin:/usr/local/bin:/usr/bin:/bin
+
+# 每天早上 6 点和晚上 18 点各运行一次追更
+0 6,18 * * * cd /opt/komichi-crawler && python -m komichi_crawler refresh >> logs/cron.log 2>&1
+
+# 导入新作品（手动执行，不在 cron 里）:
+#   cd /opt/komichi-crawler && python -m komichi_crawler import "https://manga.bilibili.com/detail/mc24742"
+#
+# 列出已有作品:
+#   cd /opt/komichi-crawler && python -m komichi_crawler list

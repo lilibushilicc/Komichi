@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="komichi-cli",
-    version="0.1.0",
+    version="0.2.0",
     description="Komichi CLI - 基于 Cloudflare Serverless 的漫画追更管理系统命令行工具",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -15,6 +15,7 @@ setup(
     packages=find_packages(),
     python_requires=">=3.9",
     install_requires=[
+        "komichi-crawler>=1.1",
         "click>=8.0.0",
         "httpx>=0.24.0",
         "rich>=13.0.0",

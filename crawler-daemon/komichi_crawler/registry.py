@@ -1,15 +1,22 @@
-"""多源注册表与换备机制
+"""多源注册表（CLI 类接口 + daemon 模块接口 共用）
 
-- 所有爬虫源在此注册，通过 name 唯一标识。
-- 提供 URL 域名自动匹配（source_for_url）与关键词多源自动换备（crawl_with_fallback）。
-- 新增源只需：实现 BaseCrawler 子类 -> 在 __init__.py 导入 -> 注册 -> 加入 config 的 source_priority。
+- 类接口（CLI 使用）：register_source 装饰器注册 BaseCrawler 子类，
+  提供 get_crawler / source_for_url / crawl_with_fallback（交互式确认 + 换备）/ describe_sources。
+- 模块接口（daemon 使用）：源模块声明 NAME / DOMAINS / is_supported / crawl(url, timeout_ms) /
+  search(keyword, timeout_ms) / HAS_SEARCH，提供 resolve_source / get_source /
+  supported_names / search_all。注册类时自动登记其所在模块。
+
+新增源只需：实现模块接口（可选类接口）-> 在 __init__.py 导入 -> 注册类 -> 加入 source_priority。
 """
 from __future__ import annotations
 
-from typing import Callable, Dict, List, Optional, Tuple, Type, Union
+import sys
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 
-from .. import config as cfg_module
-from .base import BaseCrawler, CrawlError, SourceNotFound, SourceUnavailable, WorkInfo
+from .base import BaseCrawler, CrawlError, SourceNotFound, WorkInfo
+
+# 关键词导入的默认源优先级（未配置 source_priority 时使用）
+DEFAULT_SOURCE_ORDER = ["godamh", "mh160mh", "guazi", "kuaikan", "tencent", "bilibili"]
 
 
 class SourceRegistry:
@@ -17,20 +24,25 @@ class SourceRegistry:
 
     def __init__(self) -> None:
         self._sources: Dict[str, Type[BaseCrawler]] = {}
+        self._modules: Dict[str, Any] = {}
         self._domains: Dict[str, str] = {}
 
     def register(self, crawler_cls: Type[BaseCrawler]) -> Type[BaseCrawler]:
-        """注册一个爬虫源（装饰器用法），并登记其域名映射"""
+        """注册一个爬虫源（装饰器用法），并登记其域名映射与所在模块"""
         name = crawler_cls.name
         if not name or name == "base":
             raise ValueError(f"爬虫 {crawler_cls.__name__} 必须声明 name")
         self._sources[name] = crawler_cls
         for domain in crawler_cls.domains or []:
             self._domains[domain.lower()] = name
+        # 类所在模块若实现了模块接口（crawl/NAME），同时登记供 daemon 使用
+        mod = sys.modules.get(crawler_cls.__module__)
+        if mod is not None and hasattr(mod, "NAME") and hasattr(mod, "crawl"):
+            self._modules[name] = mod
         return crawler_cls
 
     # ------------------------------------------------------------
-    # 查询
+    # 查询（类接口）
     # ------------------------------------------------------------
     def list_sources(self) -> List[str]:
         """返回所有已注册源的名字（按注册顺序）"""
@@ -40,9 +52,12 @@ class SourceRegistry:
         """按名字获取爬虫类，未注册返回 None"""
         return self._sources.get(name)
 
-    def resolve_url(self, url: str) -> Optional[str]:
+    def resolve_name(self, url: str) -> Optional[str]:
         """根据 URL 的域名反查源名字，未匹配返回 None"""
-        host = url.split("/", 3)[2].lower()
+        try:
+            host = url.split("/", 3)[2].lower()
+        except IndexError:
+            return None
         for domain, name in self._domains.items():
             if host == domain or host.endswith("." + domain):
                 return name
@@ -59,13 +74,56 @@ class SourceRegistry:
             )
         return cls(source=source, title=title, category=category, cover=cover)
 
+    # ------------------------------------------------------------
+    # 查询（模块接口，daemon 使用）
+    # ------------------------------------------------------------
+    def list_modules(self) -> List[Any]:
+        """返回所有实现了模块接口的源模块（按注册顺序）"""
+        return [self._modules[n] for n in self._sources if n in self._modules]
+
+    def get_module(self, name: str) -> Optional[Any]:
+        """按源名获取模块，未注册返回 None"""
+        return self._modules.get(name)
+
+    def resolve_module(self, url: str) -> Optional[Any]:
+        """按 URL 匹配源模块（逐模块 is_supported，语义与 daemon 旧版一致）"""
+        for mod in self.list_modules():
+            try:
+                if mod.is_supported(url):
+                    return mod
+            except Exception:
+                continue
+        return None
+
 
 REGISTRY = SourceRegistry()
 
+# 关键词导入优先级：可被 CLI 侧注入（读取 ~/.komichi/config.json 的 source_priority）
+_priority_provider: Optional[Callable[[], Any]] = None
 
-# ------------------------------------------------------------
-# 公共接口
-# ------------------------------------------------------------
+
+def set_source_priority_provider(fn: Optional[Callable[[], Any]]) -> None:
+    """注册 source_priority 配置提供者（CLI 兼容层调用）"""
+    global _priority_provider
+    _priority_provider = fn
+
+
+def _configured_source_order() -> List[str]:
+    if _priority_provider is not None:
+        try:
+            prio = _priority_provider()
+        except Exception:
+            prio = None
+        if isinstance(prio, str):
+            return [s.strip() for s in prio.split(",") if s.strip()]
+        if isinstance(prio, (list, tuple)) and prio:
+            return [str(s).strip() for s in prio if str(s).strip()]
+    return list(DEFAULT_SOURCE_ORDER)
+
+
+# ============================================================
+# 类接口（CLI 使用）
+# ============================================================
 def list_sources() -> List[str]:
     """列出所有可用源名字"""
     return REGISTRY.list_sources()
@@ -78,7 +136,7 @@ def get_crawler(name: str, source: str, title: str = "", category: str = "", cov
 
 def source_for_url(url: str) -> Optional[str]:
     """根据 URL 匹配源名字（godamh.com -> godamh），未匹配返回 None"""
-    return REGISTRY.resolve_url(url)
+    return REGISTRY.resolve_name(url)
 
 
 def crawl_with_fallback(
@@ -125,13 +183,7 @@ def crawl_with_fallback(
     if isinstance(sources, str):
         source_names = [s.strip() for s in sources.split(",") if s.strip()]
     elif sources is None:
-        prio = cfg_module.get("source_priority", [])
-        if isinstance(prio, str):
-            source_names = [s.strip() for s in prio.split(",") if s.strip()]
-        elif isinstance(prio, (list, tuple)):
-            source_names = [str(s).strip() for s in prio if str(s).strip()]
-        else:
-            source_names = []
+        source_names = _configured_source_order()
     else:
         source_names = list(sources)
 
@@ -156,7 +208,11 @@ def crawl_with_fallback(
         if confirm is not None:
             try:
                 accepted = confirm(name, work)
-            except Exception:
+            except (TypeError, ValueError, KeyError, OSError) as e:
+                # confirm 回调自身异常时记录并视为接受，避免阻断换备流程
+                errors.append(
+                    f"  [{crawler.display_name or name}] 确认回调异常: {type(e).__name__}: {e}"
+                )
                 accepted = True
             if not accepted:
                 errors.append(f"  [{crawler.display_name or name}] 用户拒绝，换下一个源")
@@ -179,3 +235,40 @@ def describe_sources() -> List[Tuple[str, str, List[str]]]:
         (name, cls.display_name or name, list(cls.domains or []))
         for name, cls in REGISTRY._sources.items()
     ]
+
+
+# ============================================================
+# 模块接口（daemon 使用）
+# ============================================================
+def get_source(name: str) -> Optional[Any]:
+    """按源名获取模块（runner 追更分发用）"""
+    return REGISTRY.get_module(name)
+
+
+def resolve_source(url: str) -> Optional[Any]:
+    """按 URL 域名匹配源模块（runner import / server 搜索用）"""
+    return REGISTRY.resolve_module(url)
+
+
+def supported_names() -> List[str]:
+    """所有已注册的站点源名（daemon 可爬取范围）"""
+    return [name for name in REGISTRY.list_sources() if name in REGISTRY._modules]
+
+
+def search_sources() -> List[Any]:
+    """有搜索能力的源模块（声明了 HAS_SEARCH = True）"""
+    return [m for m in REGISTRY.list_modules() if getattr(m, "HAS_SEARCH", False)]
+
+
+def search_all(keyword: str, timeout_ms: int = 45000) -> Dict[str, List[Dict[str, str]]]:
+    """对所有有搜索能力的源执行搜索，返回 {源名: [{title, url}]}。
+
+    单个源失败不影响其他源，失败的源返回空列表。
+    """
+    results: Dict[str, List[Dict[str, str]]] = {}
+    for src in search_sources():
+        try:
+            results[src.NAME] = src.search(keyword, timeout_ms=timeout_ms)
+        except Exception:
+            results[src.NAME] = []
+    return results

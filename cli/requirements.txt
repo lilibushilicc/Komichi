@@ -1,6 +1,8 @@
 click>=8.0.0
 httpx>=0.24.0
 rich>=13.0.0
+# godamh 源需要 TLS 伪装与 HTML 解析
+curl_cffi>=0.7.0
+parsel>=1.8.0
 # bilibili 源需要浏览器渲染（安装后还需: python -m playwright install chromium）
 playwright>=1.40.0
-# pathlib 是 Python 标准库（3.4+）的一部分，无需单独安装
