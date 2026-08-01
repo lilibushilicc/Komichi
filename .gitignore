@@ -15,24 +15,34 @@ worker/node_modules/
 worker/.wrangler/
 worker/.dev.vars
 
-# ── Python / CLI ──
-cli/**/__pycache__/
-cli/*.egg-info/
-cli/staging/
+# ── Python（全局，覆盖 cli/ 与 crawler-daemon/）──
+**/__pycache__/
+*.egg-info/
 *.pyc
 *.pyo
+.venv/
+venv/
+cli/staging/
 
-# ── IDE (keep project config, ignore user-specific) ──
-.idea/workspace.xml
-.idea/deploymentTargetSelector.xml
-.idea/runConfigurations.xml
-android/.idea/workspace.xml
-android/.idea/deploymentTargetSelector.xml
-android/.idea/runConfigurations.xml
+# ── crawler-daemon ──
+crawler-daemon/logs/
+crawler-daemon/config.json
+crawler-daemon/.env
+
+# ── IDE ──
+.idea/
+android/.idea/
+
+# ── AI 工具本地状态（不上传）──
+.workbuddy/
+.playwright-mcp/
 
 # ── Debug / Logs ──
-.playwright-mcp/
 *.log
+
+# ── .NET (windows/) 构建产物 ──
+windows/**/bin/
+windows/**/obj/
 
 # ── UI Reports ──
 komichi-ui/*-report.json
