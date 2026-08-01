@@ -47,11 +47,24 @@ interface ApiService {
     @GET("/api/r2/sign")
     suspend fun signR2Url(@Query("path") path: String): ApiResponse<SignUrlResponse>
 
-    /** 检查作品更新 */
+    /** 检查作品更新（force=true 时实时爬取源站） */
     @GET("/api/work/check/{id}")
-    suspend fun checkUpdate(@Path("id") id: Long): ApiResponse<CheckUpdateResponse>
+    suspend fun checkUpdate(
+        @Path("id") id: Long,
+        @Query("force") force: Boolean = false,
+    ): ApiResponse<CheckUpdateResponse>
 
     /** 删除作品 */
     @POST("/api/work/delete")
     suspend fun deleteWork(@Body body: Map<String, Long>): ApiResponse<Unit>
+
+    /** 搜索源站漫画（Worker 代理转发到 VPS，无需鉴权） */
+    @GET("/api/work/search")
+    suspend fun searchWorks(
+        @Query("keyword") keyword: String,
+    ): ApiResponse<SourceSearchResponse>
+
+    /** 通过 source_url 导入作品（Worker 能爬则爬，否则回退 VPS） */
+    @POST("/api/work/import")
+    suspend fun importWork(@Body body: Map<String, String>): ApiResponse<ImportResponse>
 }

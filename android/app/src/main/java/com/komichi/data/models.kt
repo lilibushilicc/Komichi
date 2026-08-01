@@ -55,6 +55,8 @@ data class Work(
     @SerialName("summary") val summary: String = "",
     @SerialName("last_read_chapter") val lastReadChapter: Int = 0,
     @SerialName("is_bookmarked") val isBookmarked: Boolean = false,
+    @SerialName("source") val source: String = "",
+    @SerialName("auto_refresh") val autoRefresh: Boolean = false,
 )
 
 /**
@@ -85,6 +87,8 @@ data class WorkDetail(
     @SerialName("status") @Serializable(with = StatusSerializer::class) val status: Int = WorkStatus.ONGOING,
     @SerialName("create_time") val createTime: String = "",
     @SerialName("summary") val summary: String? = null,
+    @SerialName("source") val source: String? = null,
+    @SerialName("auto_refresh") val autoRefresh: Boolean = false,
     @SerialName("chapters") val chapters: List<Chapter> = emptyList(),
 ) {
     fun toWork(): Work = Work(
@@ -99,6 +103,8 @@ data class WorkDetail(
         createTime = createTime,
         updateTime = "",
         summary = summary ?: "",
+        source = source ?: "",
+        autoRefresh = autoRefresh,
     )
 }
 

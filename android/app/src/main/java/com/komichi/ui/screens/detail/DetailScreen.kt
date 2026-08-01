@@ -69,11 +69,13 @@ import com.komichi.ui.components.StatusBadge
 import com.komichi.ui.theme.CgCard
 import com.komichi.ui.theme.CgSurfaceVariant
 import com.komichi.util.formatDate
+import com.komichi.util.formatSourceName
 import com.komichi.viewmodel.DetailViewModel
 
 @Composable
 fun DetailScreen(
     onBack: () -> Unit,
+    onOpenReader: (Int) -> Unit,
     onWorkDeleted: () -> Unit = onBack,
     viewModel: DetailViewModel = hiltViewModel(),
 ) {
@@ -169,6 +171,7 @@ fun DetailScreen(
                 onCheckUpdate = viewModel::checkUpdate,
                 onToggleExpand = viewModel::toggleChaptersExpanded,
                 onSetReadProgress = viewModel::setReadProgress,
+                onOpenReader = onOpenReader,
                 modifier = Modifier.padding(padding),
             )
         }
@@ -182,6 +185,7 @@ private fun DetailContent(
     onCheckUpdate: () -> Unit,
     onToggleExpand: () -> Unit,
     onSetReadProgress: (Int) -> Unit,
+    onOpenReader: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val work = state.work ?: return
@@ -225,6 +229,11 @@ private fun DetailContent(
                         InfoLine(stringResource(R.string.detail_last_read), "第${state.lastReadChapter}话")
                     }
                     InfoLine("更新时间", formatDate(work.updateTime.ifBlank { work.createTime }))
+                    InfoLine("数据来源", formatSourceName(work.source))
+                    InfoLine(
+                        "自动刷新",
+                        if (work.autoRefresh) "支持（Worker 定时）" else "不支持（需PC更新）",
+                    )
                 }
             }
         }

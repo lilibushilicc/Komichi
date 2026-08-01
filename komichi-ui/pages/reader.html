@@ -2014,7 +2014,26 @@
         function setChapter(ch) {
           currentIndex = ch;
           chapterNum = chapters[ch].chapter_num;
+          saveProgress();
           location.href = 'reader.html?work_id=' + workId + '&chapter_num=' + chapterNum;
+        }
+
+        var saveFails = 0;
+
+        function saveProgress() {
+          if (!chapters.length) return;
+          var num = chapters[currentIndex].chapter_num;
+          K.api.saveBookmark(workId, num).then(function () {
+            saveFails = 0;
+          }).catch(function () {
+            saveFails += 1;
+            if (saveFails < 3) {
+              setTimeout(saveProgress, 3000);
+            } else {
+              saveFails = 0;
+              K.toast('阅读进度保存失败，请检查网络');
+            }
+          });
         }
 
         function updateControls() {
@@ -2045,6 +2064,7 @@
           box.innerHTML = '<div id="reader-loading" style="padding: var(--spacer-40) 0; text-align: center; color: var(--text-secondary); font-size: var(--body-sm-font-size);">章节图片加载中...</div>';
           var ch = chapters[currentIndex];
           document.getElementById('reader-title').textContent = (work.title || '') + ' · 第 ' + ch.chapter_num + ' 话';
+          saveProgress();
           try {
             var pages = await K.loadChapterPages(workId, ch.chapter_num);
             box.innerHTML = '';
@@ -2059,12 +2079,16 @@
               img.loading = 'lazy';
               box.appendChild(img);
             });
-            K.api.saveBookmark(workId, ch.chapter_num).catch(function () {});
           } catch (e) {
             box.innerHTML = '<div id="reader-loading" style="padding: var(--spacer-40) 0; text-align: center; color: var(--text-secondary); font-size: var(--body-sm-font-size);">加载失败: ' + e.message + '</div>';
           }
           loading = false;
         }
+
+        window.addEventListener('pagehide', function () { saveProgress(); });
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'hidden') saveProgress();
+        });
 
         (async function () {
           try {

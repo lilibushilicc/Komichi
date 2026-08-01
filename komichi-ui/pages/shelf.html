@@ -2032,7 +2032,7 @@
           var count = document.getElementById('shelf-count');
           grid.innerHTML = '';
           var list = all.filter(function (bm) {
-            if (filter === 'updated') return bm.chapter_num < (bm.latest_chapter_num || 0);
+            if (filter === 'updated') return bm.status !== 'completed' && bm.chapter_num < (bm.latest_chapter_num || 0);
             if (filter === 'reading') return (bm.chapter_num || 0) > 0;
             return true;
           });

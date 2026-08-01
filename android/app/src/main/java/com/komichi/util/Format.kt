@@ -65,3 +65,15 @@ fun isToday(raw: String?): Boolean {
     val today = OUTPUT_DATE.format(Date())
     return OUTPUT_DATE.format(d) == today
 }
+
+/** 将爬虫源标识转为用户友好的中文名称 */
+fun formatSourceName(source: String?): String = when (source?.lowercase()?.trim()) {
+    "tencent" -> "腾讯动漫"
+    "mh160mh" -> "160漫画"
+    "guazi" -> "瓜子漫画"
+    "kuaikan" -> "快看漫画"
+    "bilibili" -> "哔哩哔哩漫画"
+    "godamh" -> "Godamh"
+    null, "", "unknown" -> "未知"
+    else -> source
+}

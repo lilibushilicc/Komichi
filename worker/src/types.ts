@@ -10,6 +10,8 @@ export interface Bindings {
   BUCKET: R2Bucket;
   /** JWT 签名密钥 */
   JWT_SECRET: string;
+  /** VPS crawler-daemon 地址（搜索/导入代理），如 http://your-vps-ip:8788 */
+  VPS_URL: string;
 }
 
 /** JWT 载荷结构 */

@@ -45,9 +45,33 @@ data class CheckUpdateResponse(
     val work: Work? = null,
     @SerialName("latest_chapter") val latestChapter: Chapter? = null,
     @SerialName("has_update") val hasUpdate: Boolean = false,
+    @SerialName("new_chapter_count") val newChapterCount: Int = 0,
+    @SerialName("force_error") val forceError: String? = null,
 )
 
 @Serializable
 data class SaveBookmarkResponse(
     @SerialName("bookmark_id") val bookmarkId: Long = 0,
+)
+
+// ---------- 源站搜索 ----------
+
+@Serializable
+data class SourceSearchItem(
+    val title: String = "",
+    val url: String = "",
+)
+
+@Serializable
+data class SourceSearchResponse(
+    val results: Map<String, List<SourceSearchItem>> = emptyMap(),
+)
+
+@Serializable
+data class ImportResponse(
+    @SerialName("work_id") val workId: Long = 0,
+    val title: String = "",
+    val source: String = "",
+    @SerialName("chapter_count") val chapterCount: Int = 0,
+    @SerialName("new_chapters") val newChapters: Int = 0,
 )

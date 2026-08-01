@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.komichi.data.StoreManager
 import com.komichi.data.Work
+import com.komichi.data.WorkStatus
 import com.komichi.repository.ComicRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +22,8 @@ data class ShelfItem(
     val lastChapter: Int,
     val lastReadTime: String,
 ) {
-    val hasUpdate: Boolean get() = work.latestChapterNum > lastChapter
+    val hasUpdate: Boolean
+        get() = WorkStatus.isOngoing(work.status) && work.latestChapterNum > lastChapter
     val isReading: Boolean get() = lastChapter in 1 until work.latestChapterNum
 }
 

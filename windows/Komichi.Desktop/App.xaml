@@ -1,0 +1,264 @@
+﻿<Application x:Class="Komichi.Desktop.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <!-- ═══ 配色体系：对齐 Android 端 (CgDarkColorScheme) ═══ -->
+        <!-- 背景层级 -->
+        <SolidColorBrush x:Key="BgBlackBrush" Color="#0C0C0D"/>
+        <SolidColorBrush x:Key="BgBaseBrush" Color="#1A1B1D"/>
+        <SolidColorBrush x:Key="BgSurfaceBrush" Color="#222427"/>
+        <SolidColorBrush x:Key="BgElevatedBrush" Color="#2A2D31"/>
+        <SolidColorBrush x:Key="BgMenuBrush" Color="#202123"/>
+
+        <!-- 品牌色（鲜亮绿） -->
+        <SolidColorBrush x:Key="BrandBrush" Color="#32F08C"/>
+        <SolidColorBrush x:Key="BrandHoverBrush" Color="#0FDC78"/>
+        <SolidColorBrush x:Key="BrandContainerBrush" Color="#143D29"/>
+        <SolidColorBrush x:Key="OnBrandBrush" Color="#0C0C0D"/>
+
+        <!-- 强调色 -->
+        <SolidColorBrush x:Key="AccentAmberBrush" Color="#DCB364"/>
+        <SolidColorBrush x:Key="AccentTealBrush" Color="#2DD288"/>
+        <SolidColorBrush x:Key="AccentCoralBrush" Color="#FF9392"/>
+
+        <!-- 状态色 -->
+        <SolidColorBrush x:Key="ErrorBrush" Color="#FF5C5C"/>
+        <SolidColorBrush x:Key="OnErrorBrush" Color="#0C0C0D"/>
+
+        <!-- 文字层级 -->
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#D1D3DB"/>
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#9599A6"/>
+        <SolidColorBrush x:Key="TextTertiaryBrush" Color="#666B75"/>
+
+        <!-- 边框层级 -->
+        <SolidColorBrush x:Key="OutlineBrush" Color="#383A40"/>
+        <SolidColorBrush x:Key="OutlineMediumBrush" Color="#4A4D55"/>
+        <SolidColorBrush x:Key="OutlineStrongBrush" Color="#5C5F68"/>
+
+        <!-- 兼容旧键名 -->
+        <SolidColorBrush x:Key="WindowBgBrush" Color="#1A1B1D"/>
+        <SolidColorBrush x:Key="CardBgBrush" Color="#222427"/>
+        <SolidColorBrush x:Key="CardHoverBrush" Color="#2D323C"/>
+        <SolidColorBrush x:Key="BorderBrush" Color="#383A40"/>
+        <SolidColorBrush x:Key="AccentBrush" Color="#32F08C"/>
+        <SolidColorBrush x:Key="AccentHoverBrush" Color="#0FDC78"/>
+        <SolidColorBrush x:Key="DangerBrush" Color="#FF5C5C"/>
+
+        <!-- 阴影 -->
+        <DropShadowEffect x:Key="CardShadow" BlurRadius="24" ShadowDepth="6" Opacity="0.35" Color="#000000"/>
+        <DropShadowEffect x:Key="SoftShadow" BlurRadius="12" ShadowDepth="2" Opacity="0.25" Color="#000000"/>
+
+        <!-- 品牌渐变（按钮/重点元素） -->
+        <LinearGradientBrush x:Key="BrandGradient" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#32F08C" Offset="0"/>
+            <GradientStop Color="#0FDC78" Offset="1"/>
+        </LinearGradientBrush>
+
+        <!-- 窗口底 -->
+        <LinearGradientBrush x:Key="WindowGradient" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#1E2025" Offset="0"/>
+            <GradientStop Color="#17181C" Offset="1"/>
+        </LinearGradientBrush>
+
+        <!-- ═══ 基础样式 ═══ -->
+        <Style TargetType="Window">
+            <Setter Property="Background" Value="{StaticResource BgBaseBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+        </Style>
+
+        <!-- 输入框 -->
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource BgElevatedBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OutlineBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="CaretBrush" Value="{StaticResource BrandBrush}"/>
+            <Setter Property="SelectionBrush" Value="#4D32F08C"/>
+            <Style.Triggers>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource BrandBrush}"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource OutlineStrongBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="PasswordBox">
+            <Setter Property="Background" Value="{StaticResource BgElevatedBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OutlineBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="CaretBrush" Value="{StaticResource BrandBrush}"/>
+            <Style.Triggers>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource BrandBrush}"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource OutlineStrongBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 主按钮：品牌渐变 + 圆角 -->
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource BrandBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource OnBrandBrush}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="18,10"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="10" ShadowDepth="2"
+                                                  Opacity="0.30" Color="#0FDC78"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource BrandHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.9"/>
+                                <Setter TargetName="bd" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="0.97" ScaleY="0.97"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.35"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 次要按钮（描边 + 悬浮亮起） -->
+        <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OutlineBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#33FFFFFF"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource OutlineStrongBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.35"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 危险按钮 -->
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="{StaticResource ErrorBrush}"/>
+        </Style>
+
+        <!-- 滚动条 -->
+        <Style TargetType="ScrollBar">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Style.Triggers>
+                <Trigger Property="Orientation" Value="Horizontal">
+                    <Setter Property="Height" Value="8"/>
+                    <Setter Property="Width" Value="Auto"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style TargetType="Thumb">
+            <Setter Property="Background" Value="#334A5160"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#664A5160"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 进度条（品牌色胶囊，indeterminate 呼吸动画） -->
+        <Style TargetType="ProgressBar">
+            <Setter Property="Background" Value="#26FFFFFF"/>
+            <Setter Property="Foreground" Value="{StaticResource BrandBrush}"/>
+            <Setter Property="Height" Value="4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border x:Name="PART_Track" Background="{TemplateBinding Background}" CornerRadius="2"/>
+                            <Border x:Name="PART_Indicator" Background="{TemplateBinding Foreground}" CornerRadius="2"
+                                    HorizontalAlignment="Left" Width="0" Opacity="1"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsIndeterminate" Value="True">
+                                <Setter TargetName="PART_Indicator" Property="Width" Value="NaN"/>
+                                <Setter TargetName="PART_Indicator" Property="HorizontalAlignment" Value="Stretch"/>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                            <DoubleAnimation Storyboard.TargetName="PART_Indicator"
+                                                             Storyboard.TargetProperty="Opacity"
+                                                             From="1" To="0.25" Duration="0:0:0.9"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 列表项基色（用于 ListBox 透明化） -->
+        <Style TargetType="ListBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+    </Application.Resources>
+</Application>

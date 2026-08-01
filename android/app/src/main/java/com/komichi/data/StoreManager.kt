@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -30,6 +31,7 @@ class StoreManager @Inject constructor(
         val USERNAME = stringPreferencesKey("username")
         val LOGGED_IN = booleanPreferencesKey("logged_in")
         val SHELF_VIEW_MODE = intPreferencesKey("shelf_view_mode") // 0=grid 1=list
+        val DISABLED_SOURCES = stringSetPreferencesKey("disabled_sources")
     }
 
     val token: Flow<String> = context.dataStore.data.map { it[Keys.TOKEN] ?: "" }
@@ -39,6 +41,11 @@ class StoreManager @Inject constructor(
     val username: Flow<String> = context.dataStore.data.map { it[Keys.USERNAME] ?: "" }
     val isLoggedIn: Flow<Boolean> = context.dataStore.data.map { it[Keys.LOGGED_IN] ?: false }
     val shelfViewMode: Flow<Int> = context.dataStore.data.map { it[Keys.SHELF_VIEW_MODE] ?: 0 }
+
+    /** 被禁用的源名集合（默认空 = 全部启用） */
+    val disabledSources: Flow<Set<String>> = context.dataStore.data.map {
+        it[Keys.DISABLED_SOURCES] ?: emptySet()
+    }
 
     suspend fun saveAuth(token: String, username: String) {
         context.dataStore.edit { prefs ->
@@ -54,6 +61,18 @@ class StoreManager @Inject constructor(
 
     suspend fun saveShelfViewMode(mode: Int) {
         context.dataStore.edit { it[Keys.SHELF_VIEW_MODE] = mode }
+    }
+
+    /** 启用或禁用某个源 */
+    suspend fun setSourceEnabled(name: String, enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[Keys.DISABLED_SOURCES] ?: emptySet()
+            prefs[Keys.DISABLED_SOURCES] = if (enabled) {
+                current - name
+            } else {
+                current + name
+            }
+        }
     }
 
     suspend fun clearAuth() {

@@ -40,6 +40,7 @@ import com.komichi.ui.theme.CgStatusCompleted
 import com.komichi.ui.theme.CgStatusOngoing
 import com.komichi.ui.theme.CgSurfaceVariant
 import com.komichi.util.formatRelative
+import com.komichi.util.formatSourceName
 import com.komichi.util.isToday
 
 /** 封面图片：自动经 R2 签名加载，带骨架与错误占位 */
@@ -164,6 +165,22 @@ fun ComicGridCard(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(if (work.autoRefresh) CgStatusOngoing else CgOutline),
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = formatSourceName(work.source),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
@@ -217,6 +234,12 @@ fun ComicListCard(
             Text(
                 text = "最新 第${work.latestChapterNum}话",
                 style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+            Text(
+                text = "来源：${formatSourceName(work.source)} · ${if (work.autoRefresh) "自动刷新" else "需PC更新"}",
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
             )

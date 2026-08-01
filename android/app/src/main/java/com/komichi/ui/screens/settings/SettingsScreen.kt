@@ -27,6 +27,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -142,6 +144,26 @@ fun SettingsScreen(
             }
         }
 
+        // 源管理
+        SettingsCard(title = stringResource(R.string.settings_source_management)) {
+            Text(
+                text = stringResource(R.string.settings_source_management_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.size(12.dp))
+            state.sources.forEach { source ->
+                SourceToggleRow(
+                    title = source.displayName,
+                    enabled = source.enabled,
+                    onToggle = { viewModel.toggleSource(source.name) },
+                )
+                if (source != state.sources.last()) {
+                    Spacer(Modifier.size(4.dp))
+                }
+            }
+        }
+
         // 缓存与备份
         SettingsCard(title = stringResource(R.string.settings_cache)) {
             SettingActionRow(
@@ -248,5 +270,39 @@ private fun SettingActionRow(
         TextButton(onClick = onClick) {
             Text(actionText, color = MaterialTheme.colorScheme.primary)
         }
+    }
+}
+
+@Composable
+private fun SourceToggleRow(
+    title: String,
+    enabled: Boolean,
+    onToggle: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onToggle)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (enabled) MaterialTheme.colorScheme.onSurface
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Switch(
+            checked = enabled,
+            onCheckedChange = { onToggle() },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
+                uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+        )
     }
 }

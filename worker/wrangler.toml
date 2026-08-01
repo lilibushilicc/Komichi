@@ -19,9 +19,21 @@ database_id = "0510471d-bb41-4c64-b4f1-3bf589b85b97"
 binding = "BUCKET"
 bucket_name = "komichi-images"
 
+# Cron 定时触发器：每 6 小时自动检查所有作品更新
+# Worker scheduled handler 会调用 refresh-all 逻辑，无需 PC 参与
+[triggers]
+crons = ["0 */6 * * *"]
+
 # 可观测性
 [observability]
 enabled = true
+
+# 环境变量
+# VPS_URL: VPS crawler-daemon 服务地址，用于搜索代理与导入代理。
+# 搜索/导入 Worker 无法处理的源站（bilibili / godamh 等）时，请求会被转发到该地址。
+# 部署时请替换为真实 VPS IP，例如 http://1.2.3.4:8788
+[vars]
+VPS_URL = "https://crawler.270312.xyz"
 
 # 本地开发环境变量覆盖（仅 wrangler dev 生效）
 [env.local]

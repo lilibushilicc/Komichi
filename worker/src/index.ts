@@ -1,11 +1,15 @@
 /**
  * Komichi Worker 入口
  * 路由注册与全局中间件
+ *
+ * Cron scheduled handler: 每 6 小时自动爬取源站检查所有作品更新，
+ * 无需 PC 运行 CLI。
  */
 import { Hono } from 'hono';
-import type { AppEnv } from './types';
+import type { AppEnv, WorkRow } from './types';
 import { corsMiddleware } from './middleware/cors';
 import { successResponse, errorResponse } from './utils/response';
+import { resolveSource } from './crawler';
 import auth from './routes/auth';
 import work from './routes/work';
 import bookmark from './routes/bookmark';
@@ -35,7 +39,7 @@ app.route('/api/r2', r2);
 app.get('/', (c) =>
   successResponse(c, {
     service: 'komichi-worker',
-    version: '1.0.0',
+    version: '2.0.0',
     docs: '/ping',
   }),
 );
@@ -51,4 +55,62 @@ app.onError((err, c) => {
   });
 });
 
-export default app;
+/**
+ * Cron scheduled handler
+ * 定时爬取所有作品的源站，发现新章节则写入 D1。
+ * 由 wrangler.toml [triggers] crons 配置驱动。
+ */
+async function refreshAllWorks(env: AppEnv['Bindings']): Promise<void> {
+  const worksRes = await env.DB.prepare(
+    'SELECT id, title, source, source_url FROM works WHERE source_url IS NOT NULL AND source_url != ""',
+  ).all<WorkRow>();
+
+  for (const w of worksRes.results) {
+    const crawler = resolveSource(w.source_url || '');
+    if (!crawler) continue;
+
+    try {
+      const crawlResult = await crawler.crawl(w.source_url!);
+
+      // 查出已有章节
+      const existingCh = await env.DB.prepare(
+        'SELECT chapter_num FROM chapters WHERE work_id = ?',
+      ).bind(w.id).all<{ chapter_num: number }>();
+      const existingSet = new Set(existingCh.results.map((r) => r.chapter_num));
+
+      const newChapters = crawlResult.chapters.filter((ch) => !existingSet.has(ch.chapter_num));
+
+      if (newChapters.length > 0) {
+        const inserts = newChapters.map((ch) =>
+          env.DB.prepare(
+            'INSERT INTO chapters (work_id, chapter_num, chapter_title) VALUES (?, ?, ?)',
+          ).bind(w.id, ch.chapter_num, ch.chapter_title),
+        );
+        for (let i = 0; i < inserts.length; i += 100) {
+          await env.DB.batch(inserts.slice(i, i + 100));
+        }
+
+        const maxNum = Math.max(
+          ...(existingSet.size > 0 ? existingSet : [0]),
+          ...newChapters.map((ch) => ch.chapter_num),
+        );
+        await env.DB.prepare('UPDATE works SET latest_chapter_num = ? WHERE id = ?')
+          .bind(maxNum, w.id)
+          .run();
+      }
+    } catch (e) {
+      console.error(`[cron] refresh failed: ${w.title} (${w.id}):`, e);
+    }
+  }
+}
+
+export default {
+  fetch: app.fetch,
+  async scheduled(
+    _event: ScheduledEvent,
+    env: AppEnv['Bindings'],
+    ctx: ExecutionContext,
+  ): Promise<void> {
+    ctx.waitUntil(refreshAllWorks(env));
+  },
+};

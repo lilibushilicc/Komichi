@@ -1,0 +1,156 @@
+<Window x:Class="Komichi.Desktop.Views.DetailWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:conv="clr-namespace:Komichi.Desktop.Converters"
+        xmlns:models="clr-namespace:Komichi.Desktop.Models"
+        xmlns:vm="clr-namespace:Komichi.Desktop.ViewModels"
+        xmlns:views="clr-namespace:Komichi.Desktop.Views"
+        Title="作品详情"
+        Width="960" Height="680"
+        MinWidth="760" MinHeight="520"
+        WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:NullToPlaceholderConverter x:Key="NullToPlaceholder"/>
+        <conv:StatusToBrushConverter x:Key="StatusToBrush"/>
+        <conv:StringToVisibilityConverter x:Key="StringToVis"/>
+
+        <!-- 章节列表项模板 -->
+        <DataTemplate x:Key="ChapterItemTemplate" DataType="{x:Type models:Chapter}">
+            <Border x:Name="Row" Background="Transparent" CornerRadius="10" Padding="14,10" Margin="3,2">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <!-- 章节号 -->
+                    <Border Grid.Column="0" Width="34" Height="34" CornerRadius="10"
+                            Background="{StaticResource BgMenuBrush}" Margin="0,0,12,0"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ChapterNum}" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ChapterTitle, Converter={StaticResource NullToPlaceholder}, ConverterParameter=未命名章节}"
+                                   FontSize="13" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding CreateTime, Converter={StaticResource NullToPlaceholder}}"
+                                   FontSize="11" Foreground="{StaticResource TextTertiaryBrush}" Margin="0,2,0,0"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="▶" FontSize="12"
+                               Foreground="{StaticResource TextTertiaryBrush}"
+                               VerticalAlignment="Center" Margin="12,0,4,0"/>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Row" Property="Background" Value="{StaticResource BgElevatedBrush}"/>
+                </Trigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!-- ListBox 选中样式 -->
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <!-- 外层圆角容器 -->
+    <Border x:Name="WindowChrome" CornerRadius="12" Background="{StaticResource BgBaseBrush}"
+            BorderBrush="{StaticResource OutlineBrush}" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <views:CustomTitleBar x:Name="TitleBar" Grid.Row="0"/>
+
+            <Grid Grid.Row="1" Margin="28,12,28,24">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- 作品信息头部 -->
+                <Border Grid.Row="0" Background="{StaticResource BgSurfaceBrush}"
+                        CornerRadius="14" Padding="20,18" Margin="0,0,0,14">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="{Binding Work.Title, Converter={StaticResource NullToPlaceholder}}"
+                                       FontSize="24" FontWeight="Bold"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <Border Background="{Binding Work.Status, Converter={StaticResource StatusToBrush}}"
+                                        CornerRadius="11" Padding="10,3">
+                                    <TextBlock Text="{Binding Work.Status, Converter={StaticResource NullToPlaceholder}, ConverterParameter=unknown}"
+                                               FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                </Border>
+                                <TextBlock Text="{Binding ChapterCountText}" FontSize="12"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center" Margin="12,0,0,0"/>
+                                <TextBlock Text="{Binding Work.Source, Converter={StaticResource NullToPlaceholder}}"
+                                           FontSize="12" Foreground="{StaticResource TextSecondaryBrush}"
+                                           VerticalAlignment="Center" Margin="16,0,0,0"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Work.Description, Converter={StaticResource NullToPlaceholder}, ConverterParameter=暂无简介}"
+                                       FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap" Margin="0,12,0,0" MaxHeight="60"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Top" Orientation="Horizontal">
+                            <Button Content="检查更新" Style="{StaticResource SecondaryButton}"
+                                    Command="{Binding CheckUpdateCommand}" Margin="0,0,10,0" Height="36"/>
+                            <Button Content="阅读选中章节" Command="{Binding ReadSelectedCommand}" Height="36"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- 状态消息 -->
+                <Border Grid.Row="1" Background="{StaticResource BrandContainerBrush}"
+                        CornerRadius="10" Padding="12,8" Margin="0,0,0,12"
+                        Visibility="{Binding StatusMessage, Converter={StaticResource StringToVis}}">
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="12"
+                               Foreground="{StaticResource BrandBrush}"/>
+                </Border>
+
+                <!-- 章节列表 -->
+                <Border Grid.Row="2" Background="{StaticResource BgSurfaceBrush}"
+                        CornerRadius="14" Padding="8">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="章节列表" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                   Margin="12,12,0,8"/>
+                        <ListBox Grid.Row="1" Background="Transparent" BorderThickness="0"
+                                 ItemsSource="{Binding Work.Chapters}"
+                                 ItemTemplate="{StaticResource ChapterItemTemplate}"
+                                 SelectedItem="{Binding SelectedChapter}"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 VirtualizingPanel.IsVirtualizing="True"
+                                 VirtualizingPanel.VirtualizationMode="Recycling"/>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

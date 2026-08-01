@@ -85,6 +85,13 @@
     <string name="settings_about_desc">Komichi v1.0.0\n个人私有化漫画追更管理</string>
     <string name="settings_worker_url">Worker 地址</string>
     <string name="settings_token">访问 Token</string>
+    <string name="settings_source_management">源管理</string>
+    <string name="settings_source_management_desc">启用或禁用搜索源</string>
+
+    <!-- Reader -->
+    <string name="reader_prev">上一话</string>
+    <string name="reader_next">下一话</string>
+    <string name="reader_tracking_only">本应用仅用于追更记录，不支持在线阅读</string>
 
     <!-- Common -->
     <string name="common_retry">重试</string>

@@ -45,6 +45,13 @@ CREATE TABLE IF NOT EXISTS user_bookmark(
   last_read_time TIMESTAMP
 );
 
+-- 系统设置表（键值对存储，如 vps_url 等）
+CREATE TABLE IF NOT EXISTS settings(
+  key TEXT PRIMARY KEY,
+  value TEXT,
+  update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- ============================================================
 -- 索引
 -- ============================================================

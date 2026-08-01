@@ -4,6 +4,8 @@ package com.komichi.repository
 
 import com.komichi.api.ApiClient
 import com.komichi.api.ApiService
+import com.komichi.api.ImportResponse
+import com.komichi.api.SourceSearchResponse
 import com.komichi.api.unwrap
 import com.komichi.data.Bookmark
 import com.komichi.data.LoginRequest
@@ -82,9 +84,21 @@ class ComicRepository @Inject constructor(
         apiService.getWorkDetail(id).unwrap()
 
     suspend fun checkUpdate(id: Long): String =
-        apiService.checkUpdate(id).unwrap().let { r ->
-            if (r.hasUpdate) "发现新章节" else "已是最新"
+        apiService.checkUpdate(id, force = true).unwrap().let { r ->
+            when {
+                !r.forceError.isNullOrBlank() -> "检查失败: ${r.forceError}"
+                r.hasUpdate -> "发现 ${r.newChapterCount} 个新章节"
+                else -> "已是最新"
+            }
         }
+
+    // ---------- 源站搜索与导入 ----------
+
+    suspend fun searchSourceWorks(keyword: String): SourceSearchResponse =
+        apiService.searchWorks(keyword).unwrap()
+
+    suspend fun importFromSource(sourceUrl: String): ImportResponse =
+        apiService.importWork(mapOf("source_url" to sourceUrl)).unwrap()
 
     // ---------- 书签 ----------
 

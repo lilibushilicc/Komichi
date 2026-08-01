@@ -25,6 +25,9 @@ object Routes {
 
     const val DETAIL = "detail/{workId}"
     fun detail(workId: Long) = "detail/$workId"
+
+    const val READER = "reader/{workId}/{chapterNum}"
+    fun reader(workId: Long, chapterNum: Int) = "reader/$workId/$chapterNum"
 }
 
 /** 底部导航 Tab */
@@ -77,8 +80,22 @@ fun KomichiNavHost() {
         composable(
             route = Routes.DETAIL,
             arguments = listOf(navArgument("workId") { type = NavType.LongType }),
-        ) {
+        ) { backStackEntry ->
+            val workId = backStackEntry.arguments?.getLong("workId") ?: 0L
             com.komichi.ui.screens.detail.DetailScreen(
+                onBack = { navController.popBackStack() },
+                onOpenReader = { chapterNum -> navController.navigate(Routes.reader(workId, chapterNum)) },
+            )
+        }
+
+        composable(
+            route = Routes.READER,
+            arguments = listOf(
+                navArgument("workId") { type = NavType.LongType },
+                navArgument("chapterNum") { type = NavType.IntType },
+            ),
+        ) {
+            com.komichi.ui.screens.reader.ReaderScreen(
                 onBack = { navController.popBackStack() },
             )
         }
