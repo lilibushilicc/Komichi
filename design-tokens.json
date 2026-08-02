@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "name": "Komichi Design Tokens",
+    "version": "0.1.0-draft",
+    "generated": "2026-08-02",
+    "status": "DRAFT — 单一事实来源（single source of truth），尚未应用到所有端",
+    "theme": "dark-default；Android 已含浅色模式骨架（CgLightColorScheme），未全局启用"
+  },
+  "decisions": {
+    "brandColor": {
+      "status": "PARTIAL",
+      "android": { "value": "#2DD4BF", "name": "Mint Frost（薄荷青，默认）", "resolved": "2026-08-02", "note": "运行时可切换：薄荷青/午夜蓝/樱夜紫/暖橙/极简灰青" },
+      "options": {
+        "green": "#32F08C",
+        "blue": "#8AB4F8",
+        "azure": "#7AA2F7",
+        "mint": "#2DD4BF"
+      },
+      "note": "Android 默认薄荷青 #2DD4BF，且支持运行时切换 5 套配色 + 系统/浅色/深色；Web/WPF 仍为绿 #32F08C，全局统一待决议。"
+    }
+  },
+  "semantic": {
+    "color": {
+      "background":      { "value": "#1A1B1D", "note": "Web/WPF 基准；Android 用更深的 #101012" },
+      "surface":        { "value": "#222427" },
+      "surfaceVariant":  { "value": "#2A2D31" },
+      "brand":          { "value": "#32F08C", "decision": "UNRESOLVED（vs Android 的 #8AB4F8）" },
+      "brandHover":     { "value": "#0FDC78" },
+      "onBrand":        { "value": "#0C0C0D" },
+      "textPrimary":    { "value": "#D1D3DB" },
+      "textSecondary":  { "value": "#9599A6" },
+      "textTertiary":   { "value": "#666B75" },
+      "border":         { "value": "rgba(224,226,242,0.1)", "note": "Web 发丝级透明边框；WPF 实色 #383A40；Android #3A3A3F" },
+      "error":          { "value": "#F65A5A", "note": "Web #F65A5A / WPF #FF5C5C / Android #CF6679，三端各异" }
+    },
+    "radius": {
+      "sm": "4px",
+      "md": "6px",
+      "lg": "8px",
+      "xl": "10px"
+    },
+    "shapeNote": "质感分歧：Web 扁平硬边（radius 4-6，无阴影）；WPF 圆角 10px + 品牌渐变 + 投影 + 呼吸动画；Android 走 Material3 默认。"
+  },
+  "endpoints": {
+    "web": {
+      "sourceFile": "komichi-ui/colors_and_type.css",
+      "brand": "#32F08C",
+      "background": "#1A1B1D",
+      "surface": "#222427",
+      "textPrimary": "#D1D3DB",
+      "error": "#F65A5A",
+      "border": "rgba(224,226,242,0.1)",
+      "radius": "4-10px（扁平硬边）"
+    },
+    "android": {
+      "sourceFile": "android/app/src/main/java/com/komichi/ui/theme/Palette.kt",
+      "palette": "运行时可切换（Palette.kt）：薄荷青(mint,默认) / 午夜蓝(azure) / 樱夜紫(sakura) / 暖橙(amber) / 极简灰青(slate)",
+      "brandDefault": "#2DD4BF（薄荷青 primary，深色）",
+      "background": "#0D1413",
+      "surface": "#15211F",
+      "surfaceVariant": "#1C2E2B",
+      "textPrimary": "#D2E6E2",
+      "error": "#FB7185",
+      "border": "#233531",
+      "radius": "6/8/12/16/28dp（extraSmall→extraLarge）",
+      "themeSwitch": "SettingsScreen「外观」区：调色板色板 + 系统/浅色/深色三段；持久化于 StoreManager(DataStore) theme_palette / theme_mode；ThemeViewModel 暴露状态，MainActivity 读取并传给 KomichiTheme",
+      "icon": "drawable/ic_launcher_foreground.xml（渐变书本）+ drawable/ic_launcher_bg.xml（径向渐变背景）"
+    },
+    "windows": {
+      "sourceFile": "windows/Komichi.Desktop/App.xaml",
+      "brand": "#32F08C",
+      "background": "#1A1B1D",
+      "surface": "#222427",
+      "textPrimary": "#D1D3DB",
+      "error": "#FF5C5C",
+      "border": "#383A40",
+      "radius": "10px（圆角 + 渐变 + 投影）"
+    }
+  }
+}

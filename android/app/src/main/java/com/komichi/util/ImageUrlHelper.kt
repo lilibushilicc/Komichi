@@ -25,14 +25,32 @@ object ImageUrlHelper {
 class R2SignInterceptor(
     private val apiService: ApiService,
 ) : Interceptor {
+
+    /** path -> (过期时间秒, 签名URL)。签名 URL 在服务器端按天稳定，会话内复用可省去重复签名请求。 */
+    private val signedUrlCache = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, String>>()
+
     override suspend fun intercept(chain: Interceptor.Chain): ImageResult {
         val data = chain.request.data
         if (data is String && ImageUrlHelper.needsSign(data)) {
-            val signed = runCatching {
-                apiService.signR2Url(ImageUrlHelper.normalizePath(data)).unwrap().url
-            }.getOrNull()
-            if (!signed.isNullOrBlank()) {
-                val newRequest = chain.request.newBuilder().data(signed).build()
+            val path = ImageUrlHelper.normalizePath(data)
+            val nowSec = System.currentTimeMillis() / 1000
+
+            val cached = signedUrlCache[path]
+            val signedUrl = if (cached != null && cached.first > nowSec) {
+                cached.second
+            } else {
+                runCatching { apiService.signR2Url(path).unwrap() }
+                    .getOrNull()
+                    ?.also {
+                        if (it.expireAt > nowSec) {
+                            signedUrlCache[path] = it.expireAt to it.url
+                        }
+                    }
+                    ?.url
+            }
+
+            if (!signedUrl.isNullOrBlank()) {
+                val newRequest = chain.request.newBuilder().data(signedUrl).build()
                 return chain.proceed(newRequest)
             }
         }

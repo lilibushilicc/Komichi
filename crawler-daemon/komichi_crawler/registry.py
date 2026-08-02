@@ -16,7 +16,10 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 from .base import BaseCrawler, CrawlError, SourceNotFound, WorkInfo
 
 # 关键词导入的默认源优先级（未配置 source_priority 时使用）
-DEFAULT_SOURCE_ORDER = ["godamh", "mh160mh", "guazi", "kuaikan", "tencent", "bilibili"]
+DEFAULT_SOURCE_ORDER = [
+    "godamh", "mh160mh", "guazi", "kuaikan", "tencent", "bilibili",
+    "dongmanmanhua", "sfacg",
+]
 
 
 class SourceRegistry:

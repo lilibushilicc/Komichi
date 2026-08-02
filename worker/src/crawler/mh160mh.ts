@@ -21,6 +21,9 @@ const TITLE_RE = /<h4[^>]*>\s*<a[^>]*>([^<]+)<\/a>/;
 /** 匹配状态 */
 const STATUS_RE = /works-info-tc[^>]*>\s*<em[^>]*>([^<]+)<\/em>/;
 
+/** 匹配封面图: <div class="mh-date-bgpic ...">...<img src="..."> */
+const COVER_RE = /class="[^"]*mh-date-bgpic[^"]*"[^>]*>[\s\S]*?<img[^>]+src="([^"]+)"/;
+
 export const mh160mhCrawler: SourceCrawler = {
   name: 'mh160mh',
   domains: ['mh160mh.com'],
@@ -52,6 +55,13 @@ export const mh160mhCrawler: SourceCrawler = {
     const statusText = statusMatch ? statusMatch[1].trim() : '';
     const status = STATUS_MAP[statusText] || 'ongoing';
 
+    // 解析封面图
+    const coverMatch = html.match(COVER_RE);
+    let cover = coverMatch ? coverMatch[1].trim() : '';
+    if (cover && !/^https?:\/\//i.test(cover)) {
+      cover = BASE_URL + cover;
+    }
+
     // 解析章节列表
     // 页面为降序，转为升序并顺序编号
     const rawChapters: { href: string; title: string }[] = [];
@@ -75,6 +85,6 @@ export const mh160mhCrawler: SourceCrawler = {
       throw new Error(`mh160mh 无章节列表: ${title}`);
     }
 
-    return { title, chapters, status };
+    return { title, chapters, status, cover_url: cover };
   },
 };

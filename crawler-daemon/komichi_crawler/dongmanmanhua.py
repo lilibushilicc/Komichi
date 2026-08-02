@@ -15,6 +15,9 @@ from urllib.parse import urlparse, quote
 import httpx
 from parsel import Selector
 
+from .base import BaseCrawler, SourceNotFound, SourceUnavailable, WorkInfo, crawl_work
+from .registry import register_source
+
 # 多源统一接口（供 registry 调度）
 NAME = "dongmanmanhua"
 DOMAINS = ["dongmanmanhua.cn", "www.dongmanmanhua.cn"]
@@ -84,12 +87,9 @@ def crawl(source_url: str, timeout_ms: int = 45000) -> Dict[str, Any]:
         # 已经是标准 list URL，直接使用
         detail_url = source_url if source_url.startswith("http") else BASE_URL + source_url
     elif m_episode:
-        # 从 episodeList 链接无法直接获取详情，需要先搜索标题
-        # 这种情况理论上不会出现在 crawl 中（crawl 接收的是 source_url）
-        raise DongmanmanhuaCrawlError(
-            f"请使用作品列表页链接: https://www.dongmanmanhua.cn/<分类>/<名称>/list?title_no=<id>\n"
-            f"当前链接 {source_url} 是搜索结果链接，无法直接爬取"
-        )
+        # 搜索结果链接 /episodeList?titleNo=<id> 访问时会 302 跳转到标准列表页，
+        # 直接跟随重定向即可（httpx follow_redirects=True）
+        detail_url = source_url if source_url.startswith("http") else BASE_URL + source_url
     else:
         raise DongmanmanhuaCrawlError(
             f"无法识别咚漫漫画作品链接: {source_url}\n"
@@ -121,14 +121,17 @@ def crawl(source_url: str, timeout_ms: int = 45000) -> Dict[str, Any]:
             f"未能解析作品标题: {detail_url}（页面结构可能已变更）"
         )
 
-    # 封面图
-    cover = ""
-    for img in sel.css("img"):
-        src = (img.attrib.get("src") or "").strip()
-        if "aka.doubaocdn.com" in src or "dongmanmanhua.cn" in src:
-            cover = src
-            break
-    if cover and not cover.startswith("http"):
+    # 封面图：优先 og:image（真封面），回退页面内 CDN 图片
+    cover = (sel.css('meta[property="og:image"]::attr(content)').get() or "").strip()
+    if not cover:
+        for img in sel.css("img"):
+            src = (img.attrib.get("src") or "").strip()
+            if "aka.doubaocdn.com" in src or "dongmanmanhua.cn" in src:
+                cover = src
+                break
+    if cover and cover.startswith("http://"):
+        cover = "https://" + cover[7:]
+    elif cover and not cover.startswith("http"):
         cover = "https:" + cover
 
     # 状态与分类：从页面文本提取
@@ -227,7 +230,12 @@ def search(keyword: str, timeout_ms: int = 45000) -> List[Dict[str, str]]:
             # 尝试从子元素获取文本
             text = (a.css("img::attr(alt)").get() or "").strip()
         if href and text and keyword in text:
-            full_url = href if href.startswith("http") else BASE_URL + href
+            if href.startswith("//"):
+                full_url = "https:" + href
+            elif href.startswith("http"):
+                full_url = href
+            else:
+                full_url = BASE_URL + href
             if full_url not in seen_urls:
                 seen_urls.add(full_url)
                 results.append({"title": text, "url": full_url})
@@ -239,7 +247,12 @@ def search(keyword: str, timeout_ms: int = 45000) -> List[Dict[str, str]]:
         if not text:
             text = (a.css("img::attr(alt)").get() or "").strip()
         if href and text and keyword in text:
-            full_url = href if href.startswith("http") else BASE_URL + href
+            if href.startswith("//"):
+                full_url = "https:" + href
+            elif href.startswith("http"):
+                full_url = href
+            else:
+                full_url = BASE_URL + href
             if full_url not in seen_urls:
                 seen_urls.add(full_url)
                 results.append({"title": text, "url": full_url})
@@ -249,3 +262,26 @@ def search(keyword: str, timeout_ms: int = 45000) -> List[Dict[str, str]]:
 
 # 多源统一接口（供 registry 调度）
 HAS_SEARCH = True
+
+
+# 类接口（CLI 使用）
+@register_source
+class DongmanmanhuaCrawler(BaseCrawler):
+    """咚漫漫画 爬虫：爬取封面 URL + 章节名称，不下载图片"""
+
+    name = "dongmanmanhua"
+    display_name = "咚漫漫画 (dongmanmanhua.cn)"
+    domains = ["dongmanmanhua.cn"]
+
+    def crawl(self) -> WorkInfo:
+        return crawl_work(
+            self.source,
+            name=self.name,
+            display_name=self.display_name,
+            crawl_fn=crawl,
+            search_fn=search,
+            has_search=HAS_SEARCH,
+            title=self.title,
+            category=self.category,
+            cover=self.cover,
+        )

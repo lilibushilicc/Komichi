@@ -18,8 +18,12 @@ import { signJwt, verifyJwt } from '../utils/jwt';
 
 const r2 = new Hono<AppEnv>();
 
-/** 签名 URL 有效期（秒） */
-const SIGN_EXPIRE_SECONDS = 3600;
+/** 签名 URL 有效期（秒）：30 天，配合缓存长期有效 */
+const SIGN_EXPIRE_SECONDS = 2592000;
+
+/** 签名时间桶（秒）：同一 path 在桶内签发出的 URL 完全一致，
+ *  保证 Coil / 浏览器 / 边缘缓存可以命中，避免每次加载都重新下载。 */
+const SIGN_BUCKET_SECONDS = 86400;
 
 /** 根据扩展名推断 Content-Type */
 function guessContentType(path: string): string {
@@ -38,7 +42,9 @@ function guessContentType(path: string): string {
 
 /**
  * GET /api/r2/sign?path=<r2_path>
- * 生成带签名的临时访问 URL
+ * 生成带签名的临时访问 URL。
+ * iat 对齐到时间桶（默认 1 天），同一 path 在桶内返回完全相同的 URL，
+ * 使客户端与边缘缓存可命中；过期时间 = 桶起点 + SIGN_EXPIRE_SECONDS。
  */
 r2.get('/sign', authMiddleware, async (c) => {
   const path = c.req.query('path')?.trim() || '';
@@ -46,8 +52,16 @@ r2.get('/sign', authMiddleware, async (c) => {
     return errorResponse(c, 'path 参数不能为空', 400);
   }
 
+  const now = Math.floor(Date.now() / 1000);
+  const bucketIat = now - (now % SIGN_BUCKET_SECONDS);
+
   // 签发一个专用于 R2 代理访问的 token（载荷含 path 与 exp）
-  const token = await signJwt({ path, type: 'r2proxy' }, c.env.JWT_SECRET, SIGN_EXPIRE_SECONDS);
+  const token = await signJwt(
+    { path, type: 'r2proxy' },
+    c.env.JWT_SECRET,
+    SIGN_EXPIRE_SECONDS,
+    bucketIat,
+  );
 
   const baseUrl = new URL(c.req.url).origin;
   const url = `${baseUrl}/api/r2/proxy?path=${encodeURIComponent(path)}&token=${token}`;
@@ -56,13 +70,15 @@ r2.get('/sign', authMiddleware, async (c) => {
     url,
     path,
     expire: SIGN_EXPIRE_SECONDS,
-    expire_at: Math.floor(Date.now() / 1000) + SIGN_EXPIRE_SECONDS,
+    expire_at: bucketIat + SIGN_EXPIRE_SECONDS,
   });
 });
 
 /**
  * GET /api/r2/proxy?path=<r2_path>&token=<signed_token>
- * 校验签名 token 后从 R2 流式返回对象
+ * 校验签名 token 后从 R2 流式返回对象。
+ * 签名 URL 在时间桶内稳定，因此可写入边缘缓存（Cache API），
+ * 重复加载直接命中边缘，不再回源 R2。
  */
 r2.get('/proxy', async (c) => {
   const path = c.req.query('path')?.trim() || '';
@@ -80,6 +96,13 @@ r2.get('/proxy', async (c) => {
   // 校验 token 类型与 path 一致，防止越权访问其他资源
   if (payload.type !== 'r2proxy' || payload.path !== path) {
     return errorResponse(c, '签名与请求路径不匹配', 403, 403);
+  }
+
+  // 先查边缘缓存（URL 含 token，按完整 URL 作为缓存键，天然隔离）
+  const cacheKey = new URL(c.req.url).href;
+  const cached = await caches.default.match(cacheKey);
+  if (cached) {
+    return cached;
   }
 
   // 从 R2 读取对象
@@ -104,7 +127,11 @@ r2.get('/proxy', async (c) => {
     headerRecord[key] = value;
   });
 
-  return c.body(object.body, 200, headerRecord);
+  const response = new Response(object.body, { headers: headerRecord });
+  // 异步写入边缘缓存，不阻塞响应
+  c.executionCtx.waitUntil(caches.default.put(cacheKey, response.clone()));
+
+  return response;
 });
 
 /**

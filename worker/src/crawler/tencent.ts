@@ -24,6 +24,9 @@ const TITLE_RE = /<h2[^>]*class="[^"]*works-intro-title[^"]*"[^>]*>\s*<strong>([
 /** 匹配 <label class="works-intro-status">连载中</label> */
 const STATUS_RE = /<label[^>]*class="[^"]*works-intro-status[^"]*"[^>]*>\s*([^<]+)\s*<\/label>/;
 
+/** 匹配封面图: <div class="works-cover ...">...<img src="..."> */
+const COVER_RE = /class="[^"]*works-cover[^"]*"[^>]*>[\s\S]*?<img[^>]+src="([^"]+)"/;
+
 export const tencentCrawler: SourceCrawler = {
   name: 'tencent',
   domains: ['ac.qq.com'],
@@ -55,6 +58,15 @@ export const tencentCrawler: SourceCrawler = {
     const statusText = statusMatch ? statusMatch[1].trim() : '';
     const status = STATUS_MAP[statusText] || 'ongoing';
 
+    // 解析封面图: <div class="works-cover ..."><img src="...">
+    const coverMatch = html.match(COVER_RE);
+    let cover = coverMatch ? coverMatch[1].trim() : '';
+    if (cover.startsWith('//')) {
+      cover = 'https:' + cover;
+    } else if (cover && !/^https?:\/\//i.test(cover)) {
+      cover = BASE_URL + cover;
+    }
+
     // 解析章节列表
     // chapter-page-all <ol> 内为升序，每个 <a> 带 title 和 href
     const chapters: ChapterInfo[] = [];
@@ -74,6 +86,6 @@ export const tencentCrawler: SourceCrawler = {
       throw new Error(`tencent 无章节列表: ${title}`);
     }
 
-    return { title, chapters, status };
+    return { title, chapters, status, cover_url: cover };
   },
 };

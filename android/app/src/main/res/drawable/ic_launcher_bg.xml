@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 近黑冷调径向渐变背景，制造纵深高级感 -->
+    <path android:pathData="M0,0H108V108H0Z">
+        <aapt:attr name="android:fillColor">
+            <radialGradient
+                android:centerX="38"
+                android:centerY="28"
+                android:gradientRadius="98"
+                android:type="radial">
+                <item android:offset="0" android:color="#1C2030" />
+                <item android:offset="1" android:color="#070810" />
+            </radialGradient>
+        </aapt:attr>
+    </path>
+</vector>

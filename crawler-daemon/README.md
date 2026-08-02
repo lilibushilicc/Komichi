@@ -6,7 +6,7 @@
 
 ## 为什么需要
 
-Worker 的 cron 已能追更 4 个纯 HTTP 源（mh160mh/tencent/guazi/kuaikan），但 bilibili（接口带 JS/WASM 加密，必须浏览器渲染）与 godamh（需 TLS 伪装）Worker 跑不了，由本模块在 VPS 上完成。
+Worker 的 cron 已能追更 6 个纯 HTTP 源（mh160mh/tencent/guazi/kuaikan/dongmanmanhua/sfacg），但 bilibili（接口带 JS/WASM 加密，必须浏览器渲染）与 godamh（需 TLS 伪装）Worker 跑不了，由本模块在 VPS 上完成。
 
 ## 工作模式
 

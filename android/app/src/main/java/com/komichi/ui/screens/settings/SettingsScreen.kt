@@ -2,8 +2,10 @@ package com.komichi.ui.screens.settings
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -48,8 +50,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.komichi.R
+import com.komichi.ui.theme.AVAILABLE_PALETTES
 import com.komichi.ui.theme.CgCard
+import com.komichi.ui.theme.KomichiPalette
+import com.komichi.ui.theme.ThemeMode
 import com.komichi.viewmodel.SettingsViewModel
+import com.komichi.viewmodel.ThemeViewModel
 
 @Composable
 fun SettingsScreen(
@@ -84,6 +90,9 @@ fun SettingsScreen(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
         )
+
+        // 外观（配色 + 明暗）
+        AppearanceSettings()
 
         // 账号
         SettingsCard(title = stringResource(R.string.settings_account)) {
@@ -223,6 +232,114 @@ fun SettingsScreen(
                 TextButton(onClick = { showLogoutDialog = false }) {
                     Text(stringResource(R.string.settings_logout_confirm_no))
                 }
+            },
+        )
+    }
+}
+
+@Composable
+private fun AppearanceSettings(
+    viewModel: ThemeViewModel = hiltViewModel(),
+) {
+    val palettes = AVAILABLE_PALETTES
+    val currentPalette by viewModel.palette.collectAsStateWithLifecycle()
+    val currentMode by viewModel.themeMode.collectAsStateWithLifecycle()
+
+    SettingsCard(title = "外观") {
+        Text(
+            text = "配色",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.size(10.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            palettes.forEach { palette ->
+                PaletteSwatch(
+                    palette = palette,
+                    selected = palette.id == currentPalette.id,
+                    onClick = { viewModel.setPalette(palette.id) },
+                )
+            }
+        }
+        Spacer(Modifier.size(16.dp))
+        Text(
+            text = "明暗",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.size(10.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            ThemeMode.entries.forEach { mode ->
+                val selected = mode == currentMode
+                Button(
+                    onClick = { viewModel.setThemeMode(mode) },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (selected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.surfaceVariant
+                        },
+                        contentColor = if (selected) {
+                            MaterialTheme.colorScheme.onPrimary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    ),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(
+                        if (mode == ThemeMode.SYSTEM) "系统"
+                        else if (mode == ThemeMode.LIGHT) "浅色"
+                        else "深色",
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PaletteSwatch(
+    palette: KomichiPalette,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable(onClick = onClick),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(50))
+                .background(palette.dark.primary)
+                .then(
+                    if (selected) {
+                        Modifier.border(
+                            2.dp,
+                            MaterialTheme.colorScheme.onBackground,
+                            RoundedCornerShape(50),
+                        )
+                    } else {
+                        Modifier
+                    },
+                ),
+        )
+        Spacer(Modifier.size(6.dp))
+        Text(
+            text = palette.name,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
             },
         )
     }

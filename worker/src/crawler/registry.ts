@@ -11,6 +11,8 @@ import { mh160mhCrawler } from './mh160mh';
 import { tencentCrawler } from './tencent';
 import { guaziCrawler } from './guazi';
 import { kuaikanCrawler } from './kuaikan';
+import { dongmanmanhuaCrawler } from './dongmanmanhua';
+import { sfacgCrawler } from './sfacg';
 
 /** 所有已注册的爬虫 */
 const CRAWLERS: SourceCrawler[] = [
@@ -18,6 +20,8 @@ const CRAWLERS: SourceCrawler[] = [
   tencentCrawler,
   guaziCrawler,
   kuaikanCrawler,
+  dongmanmanhuaCrawler,
+  sfacgCrawler,
 ];
 
 /** name -> crawler 映射 */

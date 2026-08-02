@@ -277,6 +277,11 @@ Content-Type: application/json
 | GET | `/api/work/:id` | 作品详情（含章节） | USER |
 | POST | `/api/work/update` | 新增/更新作品 | CRAWLER |
 | GET | `/api/work/check/:id` | 检查更新 | USER |
+| POST | `/api/work/import` | 通过 source_url 导入（Worker 能爬则爬，否则回退 VPS） | CRAWLER |
+| GET | `/api/work/search` | 搜索代理（转发到 VPS 搜索） | USER |
+| GET | `/api/work/refresh-all` | 批量检查所有作品更新（cron / 手动触发） | CRAWLER |
+| POST | `/api/work/import-via-vps` | 导入代理（透传 source_url 到 VPS） | CRAWLER |
+| GET/PUT | `/api/work/vps-url` | 读取 / 更新 VPS_URL 配置 | CRAWLER |
 | POST | `/api/bookmark/save` | 保存/更新阅读进度（书架+历史共用） | USER |
 | GET | `/api/bookmark/list` | 书架/阅读记录列表 | USER |
 | POST | `/api/bookmark/delete` | 删除阅读记录 | USER |

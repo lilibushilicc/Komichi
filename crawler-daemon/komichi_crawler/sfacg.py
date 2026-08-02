@@ -17,6 +17,9 @@ from urllib.parse import urlparse
 import httpx
 from parsel import Selector
 
+from .base import BaseCrawler, SourceNotFound, SourceUnavailable, WorkInfo, crawl_work
+from .registry import register_source
+
 # 多源统一接口（供 registry 调度）
 NAME = "sfacg"
 DOMAINS = ["sfacg.com", "mm.sfacg.com", "manhua.sfacg.com"]
@@ -119,9 +122,10 @@ def crawl(source_url: str, timeout_ms: int = 45000) -> Dict[str, Any]:
     # 章节列表（页面为降序，需翻转）
     chapters_raw: List[Dict[str, Any]] = []
     for a in sel.css(".comic_main_list a"):
-        chapter_text = (a.css("div::text").get() or "").strip()
-        if not chapter_text:
-            chapter_text = (a.css("::text").get() or "").strip()
+        # 取整个 div 的文本（含 <b>VIP</b> 前缀），再去除标签、压缩空白
+        div_html = a.css("div").get() or ""
+        chapter_text = re.sub(r"<[^>]+>", "", div_html)
+        chapter_text = re.sub(r"\s+", " ", chapter_text).strip()
         if chapter_text:
             chapters_raw.append({"chapter_title": chapter_text})
 
@@ -145,3 +149,29 @@ def crawl(source_url: str, timeout_ms: int = 45000) -> Dict[str, Any]:
         "status": status,
         "chapters": chapters,
     }
+
+
+# 多源统一接口（供 registry 调度）
+HAS_SEARCH = False
+
+
+# 类接口（CLI 使用）
+@register_source
+class SfacgCrawler(BaseCrawler):
+    """SF漫画 爬虫：爬取封面 URL + 章节名称，不下载图片"""
+
+    name = "sfacg"
+    display_name = "SF漫画 (sfacg.com)"
+    domains = ["sfacg.com", "mm.sfacg.com", "manhua.sfacg.com"]
+
+    def crawl(self) -> WorkInfo:
+        return crawl_work(
+            self.source,
+            name=self.name,
+            display_name=self.display_name,
+            crawl_fn=crawl,
+            has_search=HAS_SEARCH,
+            title=self.title,
+            category=self.category,
+            cover=self.cover,
+        )

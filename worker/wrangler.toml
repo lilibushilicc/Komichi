@@ -31,9 +31,26 @@ enabled = true
 # 环境变量
 # VPS_URL: VPS crawler-daemon 服务地址，用于搜索代理与导入代理。
 # 搜索/导入 Worker 无法处理的源站（bilibili / godamh 等）时，请求会被转发到该地址。
-# 部署时请替换为真实 VPS IP，例如 http://1.2.3.4:8788
+#
+# 安全：不要把真实地址提交进仓库。请通过以下方式之一注入：
+#   1)  secrets:    `wrangler secret put VPS_URL`（推荐，优先级最高）
+#   2)  本文件 [vars]: 仅填写占位符，部署前替换（见下方）
+# 运行时取值顺序：DB settings.vps_url > 环境变量/secret > 下方 [vars] 默认值
 [vars]
-VPS_URL = "https://crawler.270312.xyz"
+# TODO: 部署前替换为真实 VPS 地址（或用 wrangler secret put VPS_URL 覆盖，勿提交真实值）
+VPS_URL = "https://REPLACE_WITH_YOUR_VPS_URL"
+# 可选：CORS 允许来源白名单（逗号分隔，如 "https://app.example.com,https://komichi.example.com"）。
+# 不配置则回退为 '*'（允许所有来源，仅适合内网/私有化部署）。公网部署务必设置。
+# CORS_ALLOW_ORIGIN = "https://app.example.com"
+
+# 可选：速率限制 KV 命名空间（用于 /search 防滥用、/login 防爆破）。
+# 未配置时限流中间件自动放行。启用步骤：
+#   1) 创建: npx wrangler kv namespace create komichi-ratelimit
+#   2) 将返回的 id 填入下方（取消注释）
+#   3) 本地开发在 [env.local] 下同样加 [[kv_namespaces]]
+# [[kv_namespaces]]
+# binding = "RATE_LIMIT"
+# id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
 
 # 本地开发环境变量覆盖（仅 wrangler dev 生效）
 [env.local]

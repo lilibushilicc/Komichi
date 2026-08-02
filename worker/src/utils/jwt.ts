@@ -59,14 +59,17 @@ async function getHmacKey(secret: string): Promise<CryptoKey> {
  * @param payload 业务载荷（自动追加 iat / exp）
  * @param secret  签名密钥
  * @param expiresIn 有效期（秒），默认 24 小时
+ * @param iat     可选的签发时间覆盖（秒）。传入固定值时同一 payload 的 token 稳定，
+ *                可用于生成可缓存的图片签名 URL。
  */
 export async function signJwt(
   payload: Record<string, unknown>,
   secret: string,
   expiresIn: number = 86400,
+  iat?: number,
 ): Promise<string> {
   const header = { alg: 'HS256', typ: 'JWT' };
-  const now = Math.floor(Date.now() / 1000);
+  const now = iat ?? Math.floor(Date.now() / 1000);
   const fullPayload = { ...payload, iat: now, exp: now + expiresIn };
 
   const headerB64 = base64url(encoder.encode(JSON.stringify(header)));

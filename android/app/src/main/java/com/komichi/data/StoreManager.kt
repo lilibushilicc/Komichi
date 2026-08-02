@@ -32,6 +32,8 @@ class StoreManager @Inject constructor(
         val LOGGED_IN = booleanPreferencesKey("logged_in")
         val SHELF_VIEW_MODE = intPreferencesKey("shelf_view_mode") // 0=grid 1=list
         val DISABLED_SOURCES = stringSetPreferencesKey("disabled_sources")
+        val THEME_PALETTE = stringPreferencesKey("theme_palette") // 配色 id，默认 mint
+        val THEME_MODE = stringPreferencesKey("theme_mode")       // system/light/dark
     }
 
     val token: Flow<String> = context.dataStore.data.map { it[Keys.TOKEN] ?: "" }
@@ -41,6 +43,12 @@ class StoreManager @Inject constructor(
     val username: Flow<String> = context.dataStore.data.map { it[Keys.USERNAME] ?: "" }
     val isLoggedIn: Flow<Boolean> = context.dataStore.data.map { it[Keys.LOGGED_IN] ?: false }
     val shelfViewMode: Flow<Int> = context.dataStore.data.map { it[Keys.SHELF_VIEW_MODE] ?: 0 }
+
+    /** 当前配色 id（默认 mint） */
+    val themePalette: Flow<String> = context.dataStore.data.map { it[Keys.THEME_PALETTE] ?: "mint" }
+
+    /** 当前明暗模式（默认 system） */
+    val themeMode: Flow<String> = context.dataStore.data.map { it[Keys.THEME_MODE] ?: "system" }
 
     /** 被禁用的源名集合（默认空 = 全部启用） */
     val disabledSources: Flow<Set<String>> = context.dataStore.data.map {
@@ -61,6 +69,16 @@ class StoreManager @Inject constructor(
 
     suspend fun saveShelfViewMode(mode: Int) {
         context.dataStore.edit { it[Keys.SHELF_VIEW_MODE] = mode }
+    }
+
+    /** 设置当前配色 id（如 mint / azure / sakura / amber / slate） */
+    suspend fun saveThemePalette(id: String) {
+        context.dataStore.edit { it[Keys.THEME_PALETTE] = id }
+    }
+
+    /** 设置明暗模式（system / light / dark） */
+    suspend fun saveThemeMode(mode: String) {
+        context.dataStore.edit { it[Keys.THEME_MODE] = mode }
     }
 
     /** 启用或禁用某个源 */

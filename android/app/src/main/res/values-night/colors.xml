@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Midnight Azure — dark (default) palette，对应 design-tokens.json / ui/theme/Color.kt -->
+    <!-- Night (dark) palette — 与 values/colors.xml 一致，支持 night qualifier -->
     <color name="ct_background">#FF0E0F14</color>
     <color name="ct_surface">#FF15171E</color>
     <color name="ct_surface_variant">#FF1E2129</color>
@@ -14,6 +14,5 @@
 
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <!-- 仅作兼容保留；启动图标实际背景已由 drawable/ic_launcher_bg 渐变接管 -->
     <color name="ic_launcher_background">#FF0E0F14</color>
 </resources>

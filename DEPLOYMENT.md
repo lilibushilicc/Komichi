@@ -2,10 +2,10 @@
 
 Komichi 采用 **Worker + VPS 爬虫** 双架构：
 
-- **Cloudflare Worker（核心服务，必部署）**：API + D1 数据库 + R2 图片存储，自带 cron 追更 4 个纯 HTTP 源，可单独运行。
+- **Cloudflare Worker（核心服务，必部署）**：API + D1 数据库 + R2 图片存储，自带 cron 追更 6 个纯 HTTP 源，可单独运行。
 - **VPS 爬虫节点（可选）**：crawler-daemon，全 6 源支持 + 关键词搜索（Worker 爬虫的超集），数据全部回写 Worker，**依赖 Worker、不可脱离运行**。
 
-> 只部署 Worker 即可完整使用（4 源 + 阅读功能）；要 bilibili / godamh 源才需要加 VPS。
+> 只部署 Worker 即可完整使用（6 源 + 阅读功能）；要 bilibili / godamh 源才需要加 VPS。
 
 ## 源支持一览
 
@@ -15,10 +15,12 @@ Komichi 采用 **Worker + VPS 爬虫** 双架构：
 | tencent | 纯 HTTP | ✅ | ✅ |
 | guazi | 纯 HTTP | ✅ | ✅ |
 | kuaikan | 纯 HTTP | ✅ | ✅ |
+| dongmanmanhua | 纯 HTTP | ✅ | ✅ |
+| sfacg | 纯 HTTP | ✅ | ✅ |
 | **bilibili** | Playwright 浏览器渲染 | ❌ | ✅ |
 | **godamh** | TLS 指纹伪装 (curl_cffi) | ❌ | ✅ |
 
-Worker cron 每 6 小时刷新 4 个 HTTP 源；VPS cron（每天 06:00 / 18:00）刷新 bilibili + godamh，两边互不冲突。部署 VPS 后也可关掉 Worker 的爬虫 cron，由 VPS 统一爬。
+Worker cron 每 6 小时刷新 6 个 HTTP 源（mh160mh / tencent / guazi / kuaikan / dongmanmanhua / sfacg）；VPS cron（每天 06:00 / 18:00）刷新 bilibili + godamh，两边互不冲突。部署 VPS 后也可关掉 Worker 的爬虫 cron，由 VPS 统一爬。
 
 ---
 
@@ -167,7 +169,7 @@ python -m komichi_crawler list                # Worker 上的 VPS 源作品
 
 ### VPS 限制
 
-1. 需要浏览器 → bilibili 必须 Playwright（4 个 HTTP 源不需要）
+1. 需要浏览器 → bilibili 必须 Playwright（6 个纯 HTTP 源不需要）
 2. 吃内存 → Chromium 单实例约 300-500MB，建议 2G 起
 3. 搜索仅 2 源 → 只有 bilibili/godamh 支持站内搜索
 4. 风控 → 定时策略已错开（每天 2 次），高频可能被 bilibili 拦截

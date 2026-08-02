@@ -1,8 +1,8 @@
 """Komichi 共享爬虫运行时（CLI 与 crawler-daemon 共用）
 
 单一事实来源：
-- 6 个站点爬虫（godamh / bilibili / guazi / kuaikan / mh160mh / tencent），
-  同时暴露「模块接口」（daemon: NAME/DOMAINS/is_supported/crawl/search）
+- 8 个站点爬虫（godamh / bilibili / guazi / kuaikan / mh160mh / tencent /
+  dongmanmanhua / sfacg），同时暴露「模块接口」（daemon: NAME/DOMAINS/is_supported/crawl/search）
   与「类接口」（CLI: BaseCrawler 子类，支持标题/分类/封面覆盖与交互式换备）。
 - Worker API 客户端（WorkerAPI），CLI 通过 komichi_cli.api.client 兼容层复用。
 
@@ -25,6 +25,8 @@ from .guazi import GuaziCrawler
 from .kuaikan import KuaikanCrawler
 from .mh160mh import Mh160mhCrawler
 from .tencent import TencentCrawler
+from .dongmanmanhua import DongmanmanhuaCrawler
+from .sfacg import SfacgCrawler
 from .registry import (
     crawl_with_fallback,
     describe_sources,
@@ -59,6 +61,8 @@ __all__ = [
     "Mh160mhCrawler",
     "TencentCrawler",
     "BilibiliCrawler",
+    "DongmanmanhuaCrawler",
+    "SfacgCrawler",
     "list_sources",
     "describe_sources",
     "get_crawler",

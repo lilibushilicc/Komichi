@@ -2,7 +2,7 @@
  * Worker 爬虫类型定义
  *
  * 将 Python CLI 的爬虫逻辑移植到 Worker，使更新不再依赖 PC。
- * 仅移植纯 HTTP 可抓取的源（mh160mh / tencent / guazi / kuaikan）。
+ * 仅移植纯 HTTP 可抓取的源（mh160mh / tencent / guazi / kuaikan / dongmanmanhua / sfacg）。
  * 需要 TLS 指纹伪装（godamh）或浏览器渲染（bilibili）的源仍需 CLI。
  */
 
@@ -17,6 +17,8 @@ export interface CrawlResult {
   title: string;
   chapters: ChapterInfo[];
   status: string;
+  /** 封面图 URL（部分源可解析，用于导入时上传 R2 并回填 cover_r2_path） */
+  cover_url?: string;
 }
 
 /** 爬虫接口 */

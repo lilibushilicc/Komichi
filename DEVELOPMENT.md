@@ -6,7 +6,7 @@
 
 | 目录 | 技术栈 | 职责 |
 |------|--------|------|
-| `worker/` | TypeScript + Hono | **核心服务**：API、D1 数据、R2 图片、cron 追更 4 个 HTTP 源、服务器端导入 |
+| `worker/` | TypeScript + Hono | **核心服务**：API、D1 数据、R2 图片、cron 追更 6 个 HTTP 源、服务器端导入 |
 | `crawler-daemon/` | Python (Playwright / curl_cffi / httpx) | **VPS 爬虫节点**：全 6 源 + 搜索，`komichi_crawler` 包为爬虫/API 客户端的**单一事实来源** |
 | `cli/` | Python + Click | 本地命令行：导入/同步/上传；爬虫与 API 客户端均为对 `komichi_crawler` 的兼容层 |
 | `android/` | Kotlin + Jetpack Compose | Android 客户端 |
@@ -22,7 +22,7 @@
                     ┌──────────────────────────────┐
                     │  Worker (Hono) + D1 + R2      │  ← 核心，必部署
                     │  · API /auth /work /r2        │
-                    │  · cron 追更 4 源 (HTTP)      │
+                    │  · cron 追更 6 源 (HTTP)      │
                     └──────────────────────────────┘
                         ▲ HTTPS + JWT
                         │ POST /api/work/update 等
@@ -33,7 +33,7 @@
         └───────────────────────────────┘
 ```
 
-- **Worker 是核心**：全部数据（D1）+ API 在 Cloudflare，可单独运行（4 源）。
+- **Worker 是核心**：全部数据（D1）+ API 在 Cloudflare，可单独运行（6 源）。
 - **VPS 是增强节点**：只跑 Worker 跑不了的源（浏览器渲染 / TLS 伪装），数据回写 Worker，不可独立运行。
 - **客户端全部只连 Worker API**，VPS 对客户端完全透明。
 
@@ -62,7 +62,7 @@ CLI 与 crawler-daemon **共用**同一套爬虫与 Worker API 客户端：
 
 ### Worker (TypeScript) 侧约定
 
-- `worker/src/crawler/` — 4 个 HTTP 源（mh160mh/tencent/guazi/kuaikan）的 TS 实现，与 Python 版接口对齐（`crawl()` → `WorkInfo` 结构）
+- `worker/src/crawler/` — 6 个 HTTP 源（mh160mh/tencent/guazi/kuaikan/dongmanmanhua/sfacg）的 TS 实现，与 Python 版接口对齐（`crawl()` → `WorkInfo` 结构）
 - `worker/src/routes/work.ts` — 工作区路由：`update/list/{id}/check/import/search/vps-url`
 - 新增 Worker 源时同步维护 `registry.ts` 的源表与 cron 逻辑
 

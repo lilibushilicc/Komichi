@@ -12,6 +12,16 @@ export interface Bindings {
   JWT_SECRET: string;
   /** VPS crawler-daemon 地址（搜索/导入代理），如 http://your-vps-ip:8788 */
   VPS_URL: string;
+  /**
+   * CORS 允许来源白名单（逗号分隔）。
+   * 配置后仅命中列表的 Origin 可跨域；未配置时回退为 '*'（向后兼容，但不建议公网使用）。
+   */
+  CORS_ALLOW_ORIGIN?: string;
+  /**
+   * 速率限制计数器存储（Cloudflare KV）。
+   * 可选绑定：未配置时限流中间件自动放行，不阻断现有部署。
+   */
+  RATE_LIMIT?: KVNamespace;
 }
 
 /** JWT 载荷结构 */

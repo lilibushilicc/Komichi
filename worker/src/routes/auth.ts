@@ -7,6 +7,7 @@ import { Hono } from 'hono';
 import type { AppEnv, UserRow } from '../types';
 import { successResponse, errorResponse } from '../utils/response';
 import { signJwt, verifyPassword, hashPassword } from '../utils/jwt';
+import { rateLimit } from '../middleware/rateLimit';
 
 const auth = new Hono<AppEnv>();
 
@@ -24,7 +25,7 @@ async function parseBody<T = Record<string, unknown>>(c: { req: { json(): Promis
  * Body: { username, password }
  * 返回 JWT token
  */
-auth.post('/login', async (c) => {
+auth.post('/login', rateLimit({ keyPrefix: 'login', windowSec: 60, max: 10 }), async (c) => {
   const { username, password } = await parseBody<{ username?: string; password?: string }>(c);
 
   if (!username || !password) {

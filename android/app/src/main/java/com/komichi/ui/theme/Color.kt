@@ -2,54 +2,62 @@ package com.komichi.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ── 背景层级 ──
-val CgBlack = Color(0xFF0C0C0D)
-val CgBackground = Color(0xFF1A1B1D)        // bg-base-default
-val CgSurface = Color(0xFF222427)            // bg-base-secondary
-val CgSurfaceVariant = Color(0xFF222427)
-val CgSurfaceElevated = Color(0xFF2A2D31)    // bg-base-tertiary
-val CgCard = Color(0xFF222427)
-val CgMenu = Color(0xFF202123)              // bg-menu
-val CgTooltip = Color(0xFF1A1B1D)
+// ════════════════════════════════════════════════════════════════════════
+// Komichi Design Tokens — Android (Compose) 默认配色
+// 默认 = Mint Frost（薄荷青）#2DD4BF，与 design-tokens.json / Palette.kt 对齐。
+// 运行时可切换的「配色方案」见 Palette.kt（KomichiPalette），此处保留为
+// 各屏幕直接引用的便捷常量（默认主题下的取值）。切换配色后，MaterialTheme
+// 驱动的组件会自动跟随；以下为默认主题静态值。
+// ════════════════════════════════════════════════════════════════════════
 
-// ── 品牌色（鲜亮绿） ──
-val CgPrimary = Color(0xFF32F08C)            // bg-brand
-val CgPrimaryHover = Color(0xFF0FDC78)       // bg-brand-hover
-val CgOnPrimary = Color(0xFF0C0C0D)         // text-onbrand
-val CgPrimaryContainer = Color(0xFF143D29)   // 品牌色暗容器
-val CgOnPrimaryContainer = Color(0xFF32F08C)
-val CgPrimaryDisabled = Color(0xFF32F08C)   // 使用透明度控制
+// ── 背景层级（近黑青调） ──
+val CgBlack = Color(0xFF06100E)
+val CgBackground = Color(0xFF0D1413)        // bg-base-default
+val CgSurface = Color(0xFF15211F)            // bg-base-secondary
+val CgSurfaceVariant = Color(0xFF1C2E2B)     // bg-base-tertiary
+val CgSurfaceElevated = Color(0xFF1E302C)    // 抬升层
+val CgCard = Color(0xFF182420)
+val CgMenu = Color(0xFF1A2A27)
+val CgTooltip = Color(0xFF0D1413)
+
+// ── 品牌色（Mint Frost 薄荷青 #2DD4BF） ──
+val CgPrimary = Color(0xFF2DD4BF)
+val CgPrimaryHover = Color(0xFF5EEAD4)
+val CgOnPrimary = Color(0xFF03201C)
+val CgPrimaryContainer = Color(0xFF0E3D37)
+val CgOnPrimaryContainer = Color(0xFF9DF0E2)
+val CgPrimaryDisabled = Color(0xFF2DD4BF)    // 透明度控制
 
 // ── 次级/辅助 ──
-val CgSecondary = Color(0xFF9599A6)         // text-secondary
-val CgOnSecondary = Color(0xFF0C0C0D)
-val CgSecondaryContainer = Color(0xFF2A2D31)
+val CgSecondary = Color(0xFF8AA8A2)
+val CgOnSecondary = Color(0xFF03201C)
+val CgSecondaryContainer = Color(0xFF1C2E2B)
 
-// ── 强调色 ──
-val CgAccent = Color(0xFFDCB364)            // accent-amber
-val CgTeal = Color(0xFF2DD288)               // accent-teal
-val CgCoral = Color(0xFFFF9392)              // accent-coral
+// ── 强调色（功能色，非品牌） ──
+val CgAccent = Color(0xFFE0AF68)            // amber
+val CgTeal = Color(0xFF73DACA)               // teal
+val CgCoral = Color(0xFFFB7185)              // coral/rose
 
 // ── 状态色 ──
-val CgError = Color(0xFFFF5C5C)
-val CgOnError = Color(0xFF0C0C0D)
-val CgStatusOngoing = Color(0xFF32F08C)      // 连载中 → 品牌绿
-val CgStatusCompleted = Color(0xFFDCB364)    // 已完结 → amber
-val CgChapterRead = Color(0xFF666B75)        // 已读章节 → 文字三级
+val CgError = Color(0xFFFB7185)              // 玫瑰红（高级感错误色）
+val CgOnError = Color(0xFF2A0A12)
+val CgStatusOngoing = Color(0xFF2DD4BF)      // 连载中 → 品牌青
+val CgStatusCompleted = Color(0xFFE0AF68)   // 已完结 → amber
+val CgChapterRead = Color(0xFF5C7070)        // 已读章节 → 文字三级
 
-// ── 文字层级 ──
-val CgOnBackground = Color(0xFFD1D3DB)       // text-default
-val CgOnSurface = Color(0xFFD1D3DB)          // text-default
-val CgOnSurfaceVariant = Color(0xFF9599A6)   // text-secondary
-val CgOnSurfaceTertiary = Color(0xFF666B75)  // text-tertiary
+// ── 文字层级（冷调浅色，耐看） ──
+val CgOnBackground = Color(0xFFD2E6E2)       // text-default
+val CgOnSurface = Color(0xFFD2E6E2)
+val CgOnSurfaceVariant = Color(0xFF8AA8A2)   // text-secondary
+val CgOnSurfaceTertiary = Color(0xFF5C7070)  // text-tertiary
 
 // ── 边框层级 ──
-val CgOutline = Color(0xFF383A40)            // border-l1 (0.1)
-val CgOutlineMedium = Color(0xFF4A4D55)      // border-l2 (0.16)
-val CgOutlineStrong = Color(0xFF5C5F68)      // border-l3 (0.2)
-val CgOutlineVariant = Color(0xFF2A2D31)
-val CgBorderBrand = Color(0xFF32F08C)
+val CgOutline = Color(0xFF233531)            // border-l1
+val CgOutlineMedium = Color(0xFF2F423D)      // border-l2
+val CgOutlineStrong = Color(0xFF3C524C)      // border-l3
+val CgOutlineVariant = Color(0xFF1C2E2B)
+val CgBorderBrand = Color(0xFF2DD4BF)
 
 // ── 骨架屏/加载 ──
-val CgShimmerBase = Color(0xFF222427)
-val CgShimmerHighlight = Color(0xFF3A3D44)
+val CgShimmerBase = Color(0xFF182420)
+val CgShimmerHighlight = Color(0xFF233531)

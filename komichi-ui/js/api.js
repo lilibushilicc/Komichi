@@ -104,11 +104,20 @@
 
   /* ---------------- 图片 ---------------- */
 
+  // path -> 签名响应缓存。签名 URL 在服务器端按天稳定，
+  // 过期时间内直接复用，避免每个封面反复请求 /api/r2/sign。
+  var _signCache = {};
+
   Komichi.signedImageUrl = async function (r2Path) {
     if (!r2Path) return '';
+    var cached = _signCache[r2Path];
+    if (cached && cached.expire_at * 1000 > Date.now()) return cached.url;
     try {
       var data = await Komichi.api.sign(r2Path);
-      return data.url || '';
+      if (data && data.url) {
+        _signCache[r2Path] = data;
+      }
+      return (data && data.url) || '';
     } catch (e) {
       return '';
     }

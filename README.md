@@ -19,7 +19,7 @@ Komichi 是一个漫画阅读追踪系统，采用 **Worker + VPS 爬虫** 架�
 │  Worker · Cloudflare (核心)      │       │  VPS · 爬虫节点 (可选)        │
 │                                  │       │                              │
 │  Worker (Hono) + D1 + R2         │ ◀──── │  crawler-daemon              │
-│  ├ 4 源 cron 自动追更 (HTTP)      │ HTTPS │  ├ Playwright + Chromium     │
+│  ├ 6 源 cron 自动追更 (HTTP)      │ HTTPS │  ├ Playwright + Chromium     │
 │  ├ komichi-ui / android / cli    │ +JWT  │  ├ bilibili 源 (浏览器渲染)   │
 │  └ 全部数据存储 + API 服务        │       │  └ cron / systemd 定时       │
 │                                  │       │                              │
@@ -35,10 +35,11 @@ Komichi 是一个漫画阅读追踪系统，采用 **Worker + VPS 爬虫** 架�
 | 源 | 抓取方式 | Worker 能跑 | VPS 能跑 | 归属 |
 |----|----------|:----------:|:--------:|:----:|
 | mh160mh / tencent / guazi / kuaikan | 纯 HTTP | 能 | **能** | Worker 或 VPS |
+| dongmanmanhua / sfacg | 纯 HTTP | 能 | **能** | Worker 或 VPS |
 | **bilibili** | Playwright 浏览器渲染 | **不能** | 能 | **仅 VPS** |
 | **godamh** | TLS 指纹伪装 (curl_cffi) | **不能** | 能 | **仅 VPS** |
 
-**VPS 是 Worker 爬虫的超集**：6 源全支持 + 关键词搜索；Worker 只支持 4 个 HTTP 源。只部署 Worker 可用 4 源；加部署 VPS 获得全 6 源 + 搜索。Worker 跑不了 Chromium/TLS 伪装，所以 bilibili/godamh 只能 VPS 爬。VPS 抓到的数据全部回写 Worker，不本地存储。
+**VPS 是 Worker 爬虫的超集**：6 源全支持 + 关键词搜索；Worker 支持 6 个纯 HTTP 源（mh160mh / tencent / guazi / kuaikan / dongmanmanhua / sfacg）。只部署 Worker 可用这 6 源；加部署 VPS 额外获得 bilibili / godamh + 搜索。Worker 跑不了 Chromium/TLS 伪装，所以 bilibili/godamh 只能 VPS 爬。VPS 抓到的数据全部回写 Worker，不本地存储。
 
 ## Worker · Cloudflare（核心服务）
 
@@ -46,7 +47,7 @@ Komichi 是一个漫画阅读追踪系统，采用 **Worker + VPS 爬虫** 架�
 
 | 组件 | 技术栈 | 说明 |
 |------|--------|------|
-| `worker/` | TypeScript + Hono | 后端 API，D1 + R2，cron 刷新 4 源，支持 `POST /api/work/import` 服务器端导入 |
+| `worker/` | TypeScript + Hono | 后端 API，D1 + R2，cron 刷新 6 源，支持 `POST /api/work/import` 服务器端导入 |
 | `cli/` | Python + Click | 爬虫管理、漫画导入、图片上传（本地运行，可选；爬虫实现与 crawler-daemon 共用 `komichi_crawler`） |
 | `android/` | Kotlin + Jetpack Compose | Android 客户端 |
 | `windows/` | C# + WPF (.NET 8) | Windows 桌面客户端 |
@@ -64,7 +65,7 @@ npx wrangler d1 execute komichi --file=./init.sql --remote
 npx wrangler deploy
 ```
 
-部署后可用 `curl` 直接导入 4 源作品，**不用本地电脑跑 CLI**（见 DEPLOYMENT.md "服务器端导入"）。
+部署后可用 `curl` 直接导入 6 源作品，**不用本地电脑跑 CLI**（见 DEPLOYMENT.md "服务器端导入"）。
 
 **完整部署步骤见 [DEPLOYMENT.md](DEPLOYMENT.md)。** 综合使用手册见 [USAGE.md](USAGE.md)。
 
@@ -87,7 +88,7 @@ python -m komichi_crawler sources              # 列出支持的源
 
 **完整部署步骤见 [DEPLOYMENT.md](DEPLOYMENT.md)（VPS 章节）。** 模块技术细节（架构/数据流/扩展新源）见 [crawler-daemon/README.md](crawler-daemon/README.md)。
 
-> 注意：VPS 不是必需的。如果不用 bilibili/godamh 源，只部署 Worker 即可完整使用其他 4 个源 + 阅读功能。Worker 和 VPS 都支持服务器端导入，本地电脑完全不用动。但 VPS 必须配合 Worker 使用，不能替代 Worker。
+> 注意：VPS 不是必需的。如果不用 bilibili/godamh 源，只部署 Worker 即可完整使用其他 6 个源 + 阅读功能。Worker 和 VPS 都支持服务器端导入，本地电脑完全不用动。但 VPS 必须配合 Worker 使用，不能替代 Worker。
 
 ## 技术栈
 

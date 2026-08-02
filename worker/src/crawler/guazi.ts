@@ -61,6 +61,12 @@ export const guaziCrawler: SourceCrawler = {
 
     const title = (comic['name'] as string).trim();
 
+    // 解析封面图（JSON-LD image 字段）
+    let cover = typeof comic['image'] === 'string' ? (comic['image'] as string).trim() : '';
+    if (cover && !/^https?:\/\//i.test(cover)) {
+      cover = BASE_URL + cover;
+    }
+
     // 解析章节
     const chapters: ChapterInfo[] = [];
     if (chapterList && Array.isArray(chapterList['itemListElement'])) {
@@ -77,6 +83,6 @@ export const guaziCrawler: SourceCrawler = {
       throw new Error(`guazi 无章节列表: ${title}`);
     }
 
-    return { title, chapters, status: 'ongoing' };
+    return { title, chapters, status: 'ongoing', cover_url: cover };
   },
 };

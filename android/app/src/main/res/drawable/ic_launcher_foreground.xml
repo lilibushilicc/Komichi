@@ -1,12 +1,23 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#FF8AB4F8"
-        android:pathData="M30,32 C30,29 32,27 35,27 L52,27 C54,27 56,28 57,30 C58,28 60,27 62,27 L79,27 C82,27 84,29 84,32 L84,76 C84,78 82,80 79,80 L62,80 C60,80 58,81 57,83 C56,81 54,80 52,80 L35,80 C32,80 30,78 30,76 Z" />
-    <path
-        android:fillColor="#FF101012"
-        android:pathData="M57,33 L57,77" />
+    <!-- 精致书本字形：天蓝线性渐变填充 + 深色书脊分割线 -->
+    <path android:pathData="M30,35 C30,32 33,30 36,30 L52,30 C53,30 54,31 54,33 C54,31 55,30 56,30 L72,30 C75,30 78,32 78,35 L78,73 C78,76 75,78 72,78 L56,78 C55,78 54,77 54,75 C54,77 53,78 52,78 L36,78 C33,78 30,76 30,73 Z">
+        <aapt:attr name="android:fillColor">
+            <linearGradient
+                android:startX="30"
+                android:startY="30"
+                android:endX="78"
+                android:endY="78"
+                android:type="linear">
+                <item android:offset="0" android:color="#BCD4FF" />
+                <item android:offset="1" android:color="#5B8DEF" />
+            </linearGradient>
+        </aapt:attr>
+    </path>
+    <!-- 书脊：深色细线，增加立体分隔 -->
+    <path android:fillColor="#070810" android:pathData="M54,36 L54,74" />
 </vector>

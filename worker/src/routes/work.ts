@@ -18,7 +18,10 @@ import { Hono } from 'hono';
 import type { AppEnv, WorkRow, ChapterRow } from '../types';
 import { successResponse, errorResponse } from '../utils/response';
 import { authMiddleware, requireRole } from '../middleware/auth';
+import { rateLimit } from '../middleware/rateLimit';
 import { crawlSource, resolveSource } from '../crawler';
+import type { CrawlResult } from '../crawler';
+import { BROWSER_HEADERS } from '../crawler/types';
 import { getVpsUrl, getSetting, setSetting } from '../utils/settings';
 
 const work = new Hono<AppEnv>();
@@ -28,6 +31,68 @@ function parsePositiveInt(value: string | undefined, defaultValue: number): numb
   if (!value) return defaultValue;
   const n = parseInt(value, 10);
   return Number.isFinite(n) && n > 0 ? n : defaultValue;
+}
+
+const COVER_CONTENT_TYPES: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  bmp: 'image/bmp',
+  avif: 'image/avif',
+};
+
+/** 从封面 URL 提取扩展名（与 VPS daemon 的 _ext_of 一致，默认 jpg） */
+function coverExt(coverUrl: string): string {
+  let pathname = coverUrl;
+  try {
+    pathname = new URL(coverUrl).pathname;
+  } catch {
+    // 保留原始字符串
+  }
+  const m = pathname.match(/\.([a-z0-9]+)$/i);
+  const ext = m ? m[1].toLowerCase() : '';
+  return COVER_CONTENT_TYPES[ext] ? ext : 'jpg';
+}
+
+/**
+ * 下载源站封面并上传到 R2（komichi/covers/<work_id>.<ext>）。
+ * 与 VPS daemon runner.import_work 的封面流程保持一致。
+ * 失败时返回 null，不影响作品元数据写入。
+ */
+async function uploadCoverToR2(
+  env: AppEnv['Bindings'],
+  workId: number,
+  coverUrl: string,
+): Promise<string | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
+  try {
+    const resp = await fetch(coverUrl, {
+      headers: { ...BROWSER_HEADERS },
+      redirect: 'follow',
+      signal: controller.signal,
+    });
+    if (!resp.ok) {
+      console.log(`[work/import] 封面下载失败 ${resp.status}: ${coverUrl}`);
+      return null;
+    }
+    const arrayBuffer = await resp.arrayBuffer();
+    const ext = coverExt(coverUrl);
+    const key = `komichi/covers/${workId}.${ext}`;
+    const contentType =
+      resp.headers.get('content-type')?.split(';')[0]?.trim() ||
+      COVER_CONTENT_TYPES[ext] ||
+      'application/octet-stream';
+    await env.BUCKET.put(key, arrayBuffer, { httpMetadata: { contentType } });
+    return key;
+  } catch (e) {
+    console.log(`[work/import] 封面上传失败: ${e instanceof Error ? e.message : String(e)}`);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**
@@ -121,13 +186,13 @@ work.get('/list', async (c) => {
 /**
  * GET /api/work/search
  * 搜索代理：转发到 VPS crawler-daemon 的 GET /api/search，返回各源站搜索结果。
- * 无需鉴权，供 Android 端在导入前搜索源站漫画。
+ * 需登录（USER 即可），避免匿名调用对 VPS 造成滥用/DoS。
  *
  * 注意: 此路由必须在 /:id 参数路由之前注册，否则会被 /:id 捕获。
  *
  * Query: keyword (必填)
  */
-work.get('/search', async (c) => {
+work.get('/search', rateLimit({ keyPrefix: 'search', windowSec: 60, max: 30 }), authMiddleware, async (c) => {
   const keyword = c.req.query('keyword')?.trim() || '';
   if (!keyword) {
     return errorResponse(c, 'keyword 不能为空', 400);
@@ -266,82 +331,6 @@ work.get('/check/:id', async (c) => {
 });
 
 /**
- * GET /api/work/debug-fetch/:id
- * 诊断端点：从 Worker 直接 fetch 源站，返回状态码、响应头和 HTML 片段。
- * 用于排查 Worker 环境下源站返回内容与本地不同的问题。
- */
-work.get('/debug-fetch/:id', async (c) => {
-  const id = parsePositiveInt(c.req.param('id'), 0);
-  if (id <= 0) {
-    return errorResponse(c, '无效的作品 ID', 400);
-  }
-
-  const workRow = await c.env.DB.prepare(
-    'SELECT id, title, source, source_url FROM works WHERE id = ?',
-  ).bind(id).first<WorkRow>();
-
-  if (!workRow) {
-    return errorResponse(c, '作品不存在', 404, 404);
-  }
-
-  if (!workRow.source_url) {
-    return errorResponse(c, '该作品没有 source_url', 400);
-  }
-
-  try {
-    const resp = await fetch(workRow.source_url, {
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-        Referer: 'https://ac.qq.com/',
-      },
-      redirect: 'follow',
-    });
-
-    const html = await resp.text();
-
-    // 收集响应头
-    const respHeaders: Record<string, string> = {};
-    resp.headers.forEach((value, key) => {
-      respHeaders[key] = value;
-    });
-
-    // 查找标题相关 HTML 片段
-    const titleIdx = html.indexOf('works-intro-title');
-    const titleSnippet = titleIdx >= 0 ? html.substring(Math.max(0, titleIdx - 50), titleIdx + 300) : '(未找到 works-intro-title)';
-
-    // 查找章节相关 HTML 片段
-    const chapterIdx = html.indexOf('chapter-page-all');
-    const chapterSnippet = chapterIdx >= 0 ? html.substring(Math.max(0, chapterIdx - 50), chapterIdx + 500) : '(未找到 chapter-page-all)';
-
-    // 查找 ComicView 章节链接
-    const comicViewCount = (html.match(/ComicView\/index\/id\/\d+\/cid\/\d+/g) || []).length;
-
-    return successResponse(c, {
-      request_url: workRow.source_url,
-      response: {
-        status: resp.status,
-        statusText: resp.statusText,
-        headers: respHeaders,
-        htmlLength: html.length,
-      },
-      diagnostics: {
-        found_works_intro_title: titleIdx >= 0,
-        title_snippet: titleSnippet,
-        found_chapter_page_all: chapterIdx >= 0,
-        chapter_snippet: chapterSnippet,
-        comic_view_link_count: comicViewCount,
-        html_head: html.substring(0, 2000),
-      },
-    });
-  } catch (e) {
-    return errorResponse(c, `fetch 失败: ${e instanceof Error ? e.message : String(e)}`, 500, 500);
-  }
-});
-
-/**
  * GET /api/work/refresh-all
  * 批量检查所有作品的源站更新。供 Cron 定时调用，也可手动触发。
  * 仅处理 source_url 能匹配到 Worker 爬虫的作品。
@@ -349,7 +338,7 @@ work.get('/debug-fetch/:id', async (c) => {
 work.get('/refresh-all', async (c) => {
   // 查出所有有 source_url 的作品
   const worksRes = await c.env.DB.prepare(
-    'SELECT id, title, source, source_url FROM works WHERE source_url IS NOT NULL AND source_url != ""',
+    'SELECT id, title, source, source_url, cover_r2_path FROM works WHERE source_url IS NOT NULL AND source_url != ""',
   ).all<WorkRow>();
 
   const results: Array<{
@@ -409,6 +398,16 @@ work.get('/refresh-all', async (c) => {
           .run();
 
         entry.new_chapters = newChapters.length;
+      }
+
+      // 回填封面：作品缺少封面时下载源站封面并上传 R2
+      if (!w.cover_r2_path && crawlResult.cover_url) {
+        const uploaded = await uploadCoverToR2(c.env, w.id, crawlResult.cover_url);
+        if (uploaded) {
+          await c.env.DB.prepare('UPDATE works SET cover_r2_path = ? WHERE id = ?')
+            .bind(uploaded, w.id)
+            .run();
+        }
       }
     } catch (e) {
       entry.error = e instanceof Error ? e.message : String(e);
@@ -808,7 +807,7 @@ work.post('/import', authMiddleware, requireRole('CRAWLER', 'USER'), async (c) =
     }
   }
 
-  let crawlResult: { title: string; chapters: { chapter_num: number; chapter_title: string }[]; status: string };
+  let crawlResult: CrawlResult;
   try {
     crawlResult = await crawler.crawl(sourceUrl);
   } catch (e) {
@@ -820,9 +819,9 @@ work.post('/import', authMiddleware, requireRole('CRAWLER', 'USER'), async (c) =
     );
   }
 
-  const existing = await c.env.DB.prepare('SELECT id FROM works WHERE source_url = ?')
+  const existing = await c.env.DB.prepare('SELECT id, cover_r2_path FROM works WHERE source_url = ?')
     .bind(sourceUrl)
-    .first<{ id: number }>();
+    .first<{ id: number; cover_r2_path: string | null }>();
 
   let workId: number;
   if (existing) {
@@ -867,6 +866,18 @@ work.post('/import', authMiddleware, requireRole('CRAWLER', 'USER'), async (c) =
     .bind(maxRes?.max_num ?? 0, workId)
     .run();
 
+  // 回填封面：作品尚无封面时下载源站封面并上传 R2（与 VPS daemon 流程一致）
+  let coverR2Path = existing?.cover_r2_path ?? null;
+  if (!coverR2Path && crawlResult.cover_url) {
+    const uploaded = await uploadCoverToR2(c.env, workId, crawlResult.cover_url);
+    if (uploaded) {
+      coverR2Path = uploaded;
+      await c.env.DB.prepare('UPDATE works SET cover_r2_path = ? WHERE id = ?')
+        .bind(coverR2Path, workId)
+        .run();
+    }
+  }
+
   return successResponse(
     c,
     {
@@ -875,6 +886,7 @@ work.post('/import', authMiddleware, requireRole('CRAWLER', 'USER'), async (c) =
       source: crawler.name,
       chapter_count: crawlResult.chapters.length,
       new_chapters: newChapters.length,
+      cover_r2_path: coverR2Path,
     },
     existing ? '作品已存在，已更新章节' : '导入成功',
   );

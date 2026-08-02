@@ -66,6 +66,13 @@ export const kuaikanCrawler: SourceCrawler = {
     const statusText = typeof info['update_status'] === 'string' ? info['update_status'].trim() : '';
     const status = STATUS_MAP[statusText] || 'ongoing';
 
+    // 解析封面图（与 daemon kuaikan.py 一致）
+    const cover = (
+      typeof info['vertical_image_url'] === 'string' ? (info['vertical_image_url'] as string).trim() : ''
+    ) || (
+      typeof info['cover_image_url'] === 'string' ? (info['cover_image_url'] as string).trim() : ''
+    );
+
     // 解析章节列表（接口返回按发布时间升序）
     const chapters: ChapterInfo[] = [];
     const comics = Array.isArray(info['comics']) ? (info['comics'] as Record<string, unknown>[]) : [];
@@ -82,6 +89,6 @@ export const kuaikanCrawler: SourceCrawler = {
       throw new Error(`kuaikan 无章节列表: ${title}`);
     }
 
-    return { title, chapters, status };
+    return { title, chapters, status, cover_url: cover };
   },
 };
